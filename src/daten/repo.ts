@@ -27,12 +27,33 @@ interface SchreibTabelle<T, K> {
   update(schluessel: K, aenderungen: Partial<SyncMeta>): Promise<number>;
 }
 
-async function speichere<T extends object, K>(tabelle: SchreibTabelle<T, K>, datensatz: T, zeit: string): Promise<void> {
-  await tabelle.put({ ...ohneMeta(datensatz), aktualisiertUm: zeit, geloeschtUm: null, ausstehend: 1 } as MitMeta<T>);
+/**
+ * Zählt laufende Schreibvorgänge und spiegelt sie als `data-schreibt` am <html>-Element
+ * (E2E-Tests warten vor dem Neuladen auf "0"; später auch für die Sync-Anzeige nutzbar).
+ */
+let offeneSchreibvorgaenge = 0;
+function melde(): void {
+  if (typeof document !== 'undefined') document.documentElement.dataset.schreibt = String(offeneSchreibvorgaenge);
+}
+melde();
+function verfolge<T>(vorgang: Promise<T>): Promise<T> {
+  offeneSchreibvorgaenge++;
+  melde();
+  return vorgang.finally(() => {
+    offeneSchreibvorgaenge--;
+    melde();
+  });
 }
 
-async function loesche<T, K>(tabelle: SchreibTabelle<T, K>, schluessel: K, zeit: string): Promise<void> {
-  await tabelle.update(schluessel, { geloeschtUm: zeit, aktualisiertUm: zeit, ausstehend: 1 });
+const mitMeta = <T extends object>(datensatz: T, zeit: string) =>
+  ({ ...ohneMeta(datensatz), aktualisiertUm: zeit, geloeschtUm: null, ausstehend: 1 }) as MitMeta<T>;
+
+function speichere<T extends object, K>(tabelle: SchreibTabelle<T, K>, datensatz: T, zeit: string): Promise<void> {
+  return verfolge(tabelle.put(mitMeta(datensatz, zeit)).then(() => undefined));
+}
+
+function loesche<T, K>(tabelle: SchreibTabelle<T, K>, schluessel: K, zeit: string): Promise<void> {
+  return verfolge(tabelle.update(schluessel, { geloeschtUm: zeit, aktualisiertUm: zeit, ausstehend: 1 }).then(() => undefined));
 }
 
 // Trainings
@@ -102,9 +123,33 @@ export const loescheEigeneUebung = (id: string, zeit = jetzt()) => loesche(db.ei
 // Übungseinstellungen
 export const speichereUebungsEinstellung = (e: UebungsEinstellung, zeit = jetzt()) => speichere(db.uebungsEinstellungen, e, zeit);
 
+/**
+ * Ändert einzelne Felder der Übungseinstellung. Lesen und Schreiben in einer Transaktion,
+ * damit schnell aufeinanderfolgende Änderungen sich nicht gegenseitig überschreiben.
+ */
+export function aktualisiereUebungsEinstellung(uebungId: string, aenderung: Partial<Omit<UebungsEinstellung, 'uebungId'>>, zeit = jetzt()): Promise<void> {
+  return verfolge(
+    db.transaction('rw', db.uebungsEinstellungen, async () => {
+      const ds = await db.uebungsEinstellungen.get(uebungId);
+      const bisher = ds && istAktiv(ds) ? ohneMeta<UebungsEinstellung>(ds) : { uebungId };
+      await db.uebungsEinstellungen.put(mitMeta<UebungsEinstellung>({ ...bisher, ...aenderung, uebungId }, zeit));
+    }),
+  );
+}
+
 // Profil
 export const speichereProfil = (p: ProfilEinstellungen, zeit = jetzt()) =>
   speichere<ProfilEinstellungen & { id: typeof PROFIL_ID }, typeof PROFIL_ID>(db.profil, { ...p, id: PROFIL_ID }, zeit);
+
+/** Ändert einzelne Profil-Felder (Lesen + Schreiben in einer Transaktion, siehe oben). */
+export function aktualisiereProfil(aenderung: Partial<ProfilEinstellungen>, zeit = jetzt()): Promise<void> {
+  return verfolge(
+    db.transaction('rw', db.profil, async () => {
+      const bisher = await leseProfil();
+      await db.profil.put(mitMeta({ ...bisher, ...aenderung, id: PROFIL_ID as typeof PROFIL_ID }, zeit));
+    }),
+  );
+}
 
 export async function leseProfil(): Promise<ProfilEinstellungen> {
   const ds = await db.profil.get(PROFIL_ID);

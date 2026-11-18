@@ -1,5 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+/** Wartet, bis alle Schreibvorgänge in IndexedDB abgeschlossen sind (vor Neuladen!). */
+const gespeichert = (page: Page) => expect(page.locator('html')).toHaveAttribute('data-schreibt', '0');
+
 const nav = (page: Page) => page.getByRole('navigation', { name: 'Hauptnavigation' });
 const vorlagenUebungen = (page: Page) => page.getByRole('list', { name: 'Übungen der Vorlage' }).getByRole('listitem');
 /** Zahlenfeld eines Steppers (nicht die –/+-Knöpfe, deren Name den Feldnamen enthält) */
@@ -22,6 +25,8 @@ test('Beispielvorlage übernehmen, bearbeiten und nach Neuladen wiederfinden', a
   await page.getByRole('button', { name: 'Schrägbankdrücken (Kurzhantel) entfernen' }).click();
   await expect(uebungen).toHaveCount(4);
   await page.getByLabel('Name der Vorlage', { exact: true }).fill('Push Montag');
+
+  await gespeichert(page);
 
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'Push Montag' })).toBeVisible();
@@ -74,6 +79,8 @@ test('Eigene Übung anlegen und Übungseinstellungen dauerhaft ändern', async (
   await page.getByRole('button', { name: 'Steigerung verringern' }).click();
   await expect(feld(page, 'Steigerung')).toHaveValue('4,5');
 
+  await gespeichert(page);
+
   await page.reload();
   await expect(feld(page, 'Steigerung')).toHaveValue('4,5');
   await page.getByRole('button', { name: 'Auf Standard zurücksetzen' }).click();
@@ -87,6 +94,8 @@ test('Profil-Einstellungen bleiben nach Neuladen erhalten', async ({ page }) => 
   await feld(page, 'Standard-Pause').fill('90');
   await feld(page, 'Standard-Pause').press('Enter');
   await expect(page.getByText('1:30 min – pro Übung anpassbar.')).toBeVisible();
+
+  await gespeichert(page);
 
   await page.reload();
   await expect(page.getByRole('radio', { name: 'RPE (1–10)' })).toHaveAttribute('aria-checked', 'true');

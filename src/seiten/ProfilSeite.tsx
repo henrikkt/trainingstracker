@@ -4,7 +4,7 @@ import { Segment } from '../components/Auswahl.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { Karte, SeitenKopf } from '../components/ui.tsx';
 import { useProfil } from '../daten/hooks.ts';
-import { speichereProfil } from '../daten/repo.ts';
+import { aktualisiereProfil } from '../daten/repo.ts';
 import { istSpeicherDauerhaft } from '../daten/speicher.ts';
 import { formatierePause, GEWICHTS_SCHRITTE, PAUSE_GRENZEN } from '../domain/einstellungen.ts';
 import type { ProfilEinstellungen } from '../domain/typen.ts';
@@ -13,7 +13,7 @@ import { formatiereZahl } from '../lib/format.ts';
 export function ProfilSeite() {
   const profil = useProfil();
   const dauerhaft = useLiveQuery(istSpeicherDauerhaft);
-  const setze = (aenderung: Partial<ProfilEinstellungen>) => void speichereProfil({ ...profil, ...aenderung });
+  const setze = (aenderung: Partial<ProfilEinstellungen>) => void aktualisiereProfil(aenderung);
 
   return (
     <>

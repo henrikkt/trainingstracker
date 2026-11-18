@@ -27,6 +27,8 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - Git: Identität nur lokal im Repo (GitHub-Noreply-Adresse). Nach jeder Etappe ein Commit; vorher müssen `npm run check` (Typecheck + Unit-Tests) grün sein, E2E möglichst auch.
 - Screenshots sparsam: pro Prüfung nur Handy (375 px) und Desktop.
 - Dexie-Schema nie in bestehenden Versionen ändern, sondern `this.version(n+1)` ergänzen.
+- Teil-Änderungen an bestehenden Datensätzen (Profil, Einstellungen) nur über `aktualisiere…`-Funktionen (Transaktion), nie `{...hookWert, ...aenderung}` speichern.
+- E2E: vor `page.reload()` immer `await gespeichert(page)` (wartet auf `html[data-schreibt="0"]`). Vor dem Commit auch mit Chromium testen: `CI=true PW_CHANNEL= npx playwright test`.
 - E2E-Selektoren: Stepper-Felder per `getByRole('textbox', { name, exact: true })` (die –/+-Knöpfe enthalten den Feldnamen); Listen mit `aria-label` eindeutig machen.
 - `docs/fortschritt.md` und diese Datei nach jeder Etappe aktualisieren.
 

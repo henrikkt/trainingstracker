@@ -5,7 +5,7 @@ import { EigeneUebungFormular } from '../components/EigeneUebungFormular.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { Karte, Knopf, SeitenKopf } from '../components/ui.tsx';
 import { useEigeneUebungen, useProfil, useUebungsEinstellung } from '../daten/hooks.ts';
-import { loescheEigeneUebung, speichereEigeneUebung, speichereUebungsEinstellung } from '../daten/repo.ts';
+import { aktualisiereUebungsEinstellung, loescheEigeneUebung, speichereEigeneUebung, speichereUebungsEinstellung } from '../daten/repo.ts';
 import { effektiveEinstellungen, formatierePause, normalisiereWdhBereich, PAUSE_GRENZEN } from '../domain/einstellungen.ts';
 import { findeUebung } from '../domain/katalog.ts';
 import { standardSteigerung } from '../domain/steigerung.ts';
@@ -35,7 +35,7 @@ export function UebungSeite() {
 
   const eff = effektiveEinstellungen(uebung, einstellung, profil);
   const standard = effektiveEinstellungen(uebung, undefined, profil);
-  const setze = (aenderung: Partial<UebungsEinstellung>) => void speichereUebungsEinstellung({ ...einstellung, ...aenderung, uebungId: uebung.id });
+  const setze = (aenderung: Partial<Omit<UebungsEinstellung, 'uebungId'>>) => void aktualisiereUebungsEinstellung(uebung.id, aenderung);
 
   const unterzeile = [
     `${MUSKELGRUPPEN_NAMEN[uebung.muskel]} · ${GERAETE_NAMEN[uebung.geraet]}`,

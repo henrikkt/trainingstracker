@@ -1,5 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+/** Wartet, bis alle Schreibvorgänge in IndexedDB abgeschlossen sind (vor Neuladen!). */
+const gespeichert = (page: Page) => expect(page.locator('html')).toHaveAttribute('data-schreibt', '0');
+
 const feld = (scope: Page | Locator, name: string) => scope.getByRole('textbox', { name, exact: true });
 const karte = (page: Page, uebung: string) => page.locator('section').filter({ has: page.getByRole('heading', { level: 2, name: uebung, exact: true }) });
 
@@ -41,6 +44,7 @@ test('Training aus Vorlage erfassen, nach Neuladen fortsetzen, Zusammenfassung u
   await satz2.getByRole('button', { name: 'Satz abhaken' }).click();
 
   // Neuladen mitten im Training: nichts geht verloren, Pause läuft weiter
+  await gespeichert(page);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'Beine' })).toBeVisible();
   await expect(kniebeuge).toContainText('2/3 Sätze');
@@ -80,6 +84,7 @@ test('Freies Training komplett offline erfassen', async ({ page, context }) => {
     }
   });
   await context.setOffline(true);
+  await gespeichert(page);
   await page.reload();
   await expect(page.getByRole('status')).toContainText('Offline');
 

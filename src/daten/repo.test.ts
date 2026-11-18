@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
 import { db } from './db.ts';
 import {
+  aktualisiereProfil,
+  aktualisiereUebungsEinstellung,
   alleTrainings,
   istAktiv,
   laufendesTraining,
@@ -108,6 +110,17 @@ describe('Beispielvorlagen, Einstellungen, Profil', () => {
   it('speichert Übungseinstellungen pro Übung', async () => {
     await speichereUebungsEinstellung({ uebungId: 'kniebeuge', steigerung: { art: 'gewicht', kg: 2.5 } });
     expect(ohneMeta((await db.uebungsEinstellungen.get('kniebeuge'))!)).toEqual({ uebungId: 'kniebeuge', steigerung: { art: 'gewicht', kg: 2.5 } });
+  });
+
+  it('gleichzeitige Teil-Änderungen gehen nicht verloren (Profil und Übungseinstellung)', async () => {
+    await Promise.all([aktualisiereProfil({ intensitaet: 'rpe' }), aktualisiereProfil({ gewichtsSchritt: 1.25 }), aktualisiereProfil({ pauseSek: 90 })]);
+    expect(await leseProfil()).toEqual({ intensitaet: 'rpe', gewichtsSchritt: 1.25, pauseSek: 90 });
+
+    await Promise.all([
+      aktualisiereUebungsEinstellung('kniebeuge', { pauseSek: 180 }),
+      aktualisiereUebungsEinstellung('kniebeuge', { steigerung: { art: 'gewicht', kg: 2.5 } }),
+    ]);
+    expect(ohneMeta((await db.uebungsEinstellungen.get('kniebeuge'))!)).toEqual({ uebungId: 'kniebeuge', pauseSek: 180, steigerung: { art: 'gewicht', kg: 2.5 } });
   });
 
   it('Profil: Standardwerte ohne Eintrag, sonst gespeicherte Werte', async () => {
