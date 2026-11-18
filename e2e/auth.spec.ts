@@ -95,18 +95,22 @@ test('Passwort-Reset per Link vom Admin', async ({ page }) => {
   expect(alt).not.toBeNull();
 });
 
-test('Kontowechsel mit nicht synchronisierten Daten wird blockiert (kein Datenverlust)', async ({ page }) => {
+test('Kontowechsel mit nicht synchronisierten Daten wird blockiert (kein Datenverlust)', async ({ page, context }) => {
   page.on('dialog', (d) => void d.accept());
   const anna = await kontoMitPasswort('anna');
   const ben = await kontoMitPasswort('ben');
 
   await page.goto('./');
   await anmelden(page, anna, PASSWORT);
+  await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toBeVisible();
+  // Offline arbeiten → die Änderung bleibt lokal ausstehend
+  await context.setOffline(true);
   await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Pläne' }).click();
-  await page.getByRole('button', { name: 'Beispiel Push übernehmen' }).click(); // lokal, noch nicht synchronisiert
+  await page.getByRole('button', { name: 'Beispiel Push übernehmen' }).click();
   await gespeichert(page);
   await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Profil' }).click();
   await page.getByRole('button', { name: 'Abmelden' }).click();
+  await context.setOffline(false);
 
   await anmelden(page, ben, PASSWORT);
   await expect(page.getByRole('alert')).toContainText('noch nicht synchronisierte Daten eines anderen Kontos');
@@ -116,4 +120,6 @@ test('Kontowechsel mit nicht synchronisierten Daten wird blockiert (kein Datenve
   await anmelden(page, anna, PASSWORT);
   await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Pläne' }).click();
   await expect(page.getByRole('link', { name: /Push/ })).toBeVisible();
+  // … und jetzt wird sie synchronisiert
+  await expect(page.getByRole('status', { name: /^Sync-Status/ })).toHaveAttribute('aria-label', 'Sync-Status: Synchronisiert', { timeout: 15_000 });
 });

@@ -1,6 +1,7 @@
 import { Flag, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
+import { SyncPunkt } from '../components/SyncAnzeige.tsx';
 import { PausenLeiste } from '../components/training/PausenLeiste.tsx';
 import { UebungImTraining } from '../components/training/UebungImTraining.tsx';
 import { Knopf } from '../components/ui.tsx';
@@ -114,6 +115,7 @@ export function LiveTrainingSeite() {
             {formatiereUhr(dauerSek)}
           </p>
         </div>
+        <SyncPunkt />
         <Knopf icon={Flag} onClick={() => void beenden()}>
           Beenden
         </Knopf>

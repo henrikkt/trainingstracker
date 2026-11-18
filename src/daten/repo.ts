@@ -37,6 +37,23 @@ function melde(): void {
   if (typeof document !== 'undefined') document.documentElement.dataset.schreibt = String(offeneSchreibvorgaenge);
 }
 melde();
+
+/**
+ * Benachrichtigung bei synchronisierbaren lokalen Änderungen (für den Sync-Dienst).
+ * Wird erst NACH dem erfolgreichen Schreiben ausgelöst; Meta-Daten und Sync-Schreibvorgänge lösen nichts aus.
+ */
+const aenderungsHoerer = new Set<() => void>();
+export function beiLokalerAenderung(hoerer: () => void): () => void {
+  aenderungsHoerer.add(hoerer);
+  return () => aenderungsHoerer.delete(hoerer);
+}
+function geaendert<T>(vorgang: Promise<T>): Promise<T> {
+  return vorgang.then((ergebnis) => {
+    aenderungsHoerer.forEach((h) => h());
+    return ergebnis;
+  });
+}
+
 function verfolge<T>(vorgang: Promise<T>): Promise<T> {
   offeneSchreibvorgaenge++;
   melde();
@@ -50,11 +67,11 @@ const mitMeta = <T extends object>(datensatz: T, zeit: string) =>
   ({ ...ohneMeta(datensatz), aktualisiertUm: zeit, geloeschtUm: null, ausstehend: 1 }) as MitMeta<T>;
 
 function speichere<T extends object, K>(tabelle: SchreibTabelle<T, K>, datensatz: T, zeit: string): Promise<void> {
-  return verfolge(tabelle.put(mitMeta(datensatz, zeit)).then(() => undefined));
+  return verfolge(geaendert(tabelle.put(mitMeta(datensatz, zeit)).then(() => undefined)));
 }
 
 function loesche<T, K>(tabelle: SchreibTabelle<T, K>, schluessel: K, zeit: string): Promise<void> {
-  return verfolge(tabelle.update(schluessel, { geloeschtUm: zeit, aktualisiertUm: zeit, ausstehend: 1 }).then(() => undefined));
+  return verfolge(geaendert(tabelle.update(schluessel, { geloeschtUm: zeit, aktualisiertUm: zeit, ausstehend: 1 }).then(() => undefined)));
 }
 
 // Trainings
@@ -170,11 +187,11 @@ export const speichereUebungsEinstellung = (e: UebungsEinstellung, zeit = jetzt(
  */
 export function aktualisiereUebungsEinstellung(uebungId: string, aenderung: Partial<Omit<UebungsEinstellung, 'uebungId'>>, zeit = jetzt()): Promise<void> {
   return verfolge(
-    db.transaction('rw', db.uebungsEinstellungen, async () => {
+    geaendert(db.transaction('rw', db.uebungsEinstellungen, async () => {
       const ds = await db.uebungsEinstellungen.get(uebungId);
       const bisher = ds && istAktiv(ds) ? ohneMeta<UebungsEinstellung>(ds) : { uebungId };
       await db.uebungsEinstellungen.put(mitMeta<UebungsEinstellung>({ ...bisher, ...aenderung, uebungId }, zeit));
-    }),
+    })),
   );
 }
 
@@ -185,10 +202,10 @@ export const speichereProfil = (p: ProfilEinstellungen, zeit = jetzt()) =>
 /** Ändert einzelne Profil-Felder (Lesen + Schreiben in einer Transaktion, siehe oben). */
 export function aktualisiereProfil(aenderung: Partial<ProfilEinstellungen>, zeit = jetzt()): Promise<void> {
   return verfolge(
-    db.transaction('rw', db.profil, async () => {
+    geaendert(db.transaction('rw', db.profil, async () => {
       const bisher = await leseProfil();
       await db.profil.put(mitMeta({ ...bisher, ...aenderung, id: PROFIL_ID as typeof PROFIL_ID }, zeit));
-    }),
+    })),
   );
 }
 

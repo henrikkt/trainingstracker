@@ -27,6 +27,7 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - Git: Identität nur lokal im Repo (GitHub-Noreply-Adresse). Nach jeder Etappe ein Commit; vorher müssen `npm run check` (Typecheck + Unit-Tests) grün sein, E2E möglichst auch.
 - Screenshots sparsam: pro Prüfung nur Handy (375 px) und Desktop.
 - Dexie-Schema nie in bestehenden Versionen ändern, sondern `this.version(n+1)` ergänzen.
+- Sync schreibt direkt in Dexie (`src/sync/motor.ts`), die App immer über `repo.ts` – nur so löst eine Nutzer-Änderung `beiLokalerAenderung` und damit den Sync aus.
 - Teil-Änderungen an bestehenden Datensätzen (Profil, Einstellungen) nur über `aktualisiere…`-Funktionen (Transaktion), nie `{...hookWert, ...aenderung}` speichern.
 - E2E: vor `page.reload()` immer `await gespeichert(page)` (wartet auf `html[data-schreibt="0"]`). Vor dem Commit auch mit Chromium testen: `CI=true PW_CHANNEL= npx playwright test`.
 - E2E-Selektoren: Stepper-Felder per `getByRole('textbox', { name, exact: true })` (die –/+-Knöpfe enthalten den Feldnamen); Listen mit `aria-label` eindeutig machen.
@@ -55,6 +56,8 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
 - `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema v2 inkl. `meta`, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
   - `supabase.ts` (Client oder `null` = lokaler Modus), `sitzung.ts` (`useSitzung`, anmelden, Link einlösen, Passwort setzen, abmelden), `besitzer.ts` (wem gehören die lokalen Daten)
 - `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/einladung` (ohne Login erreichbar), `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`, `/profil/zugaenge` (nur Admin)
+- `src/sync/` – Synchronisierung: `abbildung.ts` (lokal ↔ Server, Konfliktregel), `motor.ts` (Push/Pull, Server-Schnittstelle, Fehlerarten), `supabaseServer.ts`, `dienst.ts` (Auslöser, Status, `useSyncStatus`), `testServer.ts` (nachgebauter Server für Tests)
+- `src/components/SyncAnzeige.tsx` (`SyncPunkt` im Seitenkopf), `SyncKarte.tsx` (Profil)
 - `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
 - `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`)
 - `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:

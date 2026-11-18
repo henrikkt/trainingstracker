@@ -3,6 +3,7 @@ import { Download, FileJson, FileSpreadsheet, HardDrive, Smartphone } from 'luci
 import { Segment } from '../components/Auswahl.tsx';
 import { KontoKarte } from '../components/KontoKarte.tsx';
 import { KontoLoeschenKarte } from '../components/KontoLoeschenKarte.tsx';
+import { SyncKarte } from '../components/SyncKarte.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { Karte, Knopf, SeitenKopf } from '../components/ui.tsx';
 import { useProfil, useUebungsNachschlag } from '../daten/hooks.ts';
@@ -29,6 +30,7 @@ export function ProfilSeite() {
       <SeitenKopf titel="Profil" unterzeile="Einstellungen, Export und Konto." />
       <div className="flex flex-col gap-4 pb-6">
         <KontoKarte />
+        <SyncKarte />
         <Karte className="flex flex-col gap-5">
           <h2 className="font-display text-2xl font-bold">Einstellungen</h2>
           <div className="flex flex-col gap-1">

@@ -113,8 +113,8 @@ jobs:
       - name: Playwright-Browser installieren
         run: npx playwright install --with-deps chromium
 
-      - name: E2E – Login, Einladung, Reset, Kontowechsel, Zugänge verwalten, Konto löschen
-        run: npx playwright test auth admin
+      - name: E2E – Login, Einladung, Reset, Kontowechsel, Zugänge, Konto löschen, Sync offline → online
+        run: npx playwright test auth admin sync
         env:
           CI: 'true'
           PW_CHANNEL: ''

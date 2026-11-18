@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { ChevronLeft, type LucideIcon } from 'lucide-react';
 import { Link, NavLink } from 'react-router';
+import { SyncPunkt } from './SyncAnzeige.tsx';
 
 type KnopfVariante = 'primaer' | 'sekundaer' | 'leise';
 
@@ -51,7 +52,7 @@ export function SeitenKopf({ titel, unterzeile, zurueck, aktion }: { titel: stri
       )}
       <div className="flex items-end gap-3">
         <h1 className="min-w-0 flex-1 font-display text-4xl font-extrabold tracking-tight break-words uppercase">{titel}</h1>
-        {aktion}
+        {aktion ?? <SyncPunkt />}
       </div>
       {unterzeile && <p className="mt-1 text-text-leise">{unterzeile}</p>}
     </header>

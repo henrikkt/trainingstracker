@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-18 (nach E5)
+Stand: 2026-11-19 (nach E7)
 
 ## Etappen Phase 1 (MVP)
 
@@ -13,12 +13,13 @@ Stand: 2026-11-18 (nach E5)
 | E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
 | E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | ✅ erledigt (E6a Schema/RLS · E6b Login/Einladung · E6c Functions/Admin · E6d live) |
-| E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | ⏭️ als Nächstes |
-| E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
+| E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | ✅ erledigt |
+| E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | ⏭️ als Nächstes |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Claude:** E7 – Sync-Engine (Push ausstehender Datensätze, Pull per `updated_at`-Cursor mit Überlappung, Last-Write-Wins), Auslöser (Start, online, nach Änderungen, periodisch), sichtbarer Sync-Status, E2E „offline erfassen → online → synchronisiert“ und „zweites Gerät sieht die Daten“.
+1. **Admin (du):** App auf dem Handy aktualisieren, anmelden, prüfen: Sync-Symbol oben rechts zeigt „Synchronisiert“; bisherige lokale Trainings sind danach auf dem Server.
+2. **Claude + Admin:** E8 – Backups: privates Repo `trainingstracker-backups`, age-Schlüsselpaar (privater Schlüssel nur im Passwortmanager), nächtlicher Workflow (`pg_dump` über Session-Pooler, verschlüsselt, Commit = Keep-alive), Wiederherstellungstest gemeinsam, README.
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -92,6 +93,13 @@ Stand: 2026-11-18 (nach E5)
 - **Supabase-Projekt (E6d):** Projekt-Ref `odyujozkghkstnileikb` (Frankfurt). Repository-Variablen `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_REF`; Secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (vom Admin selbst gesetzt). Öffentliche Registrierung vor dem ersten Deploy im Dashboard abgeschaltet. Erster Admin am 18.11.2026 im Dashboard angelegt (Auto Confirm) und per SQL `raw_app_meta_data.role = admin` gesetzt; Einladung eines weiteren Kontos erfolgreich getestet.
   - Rauchtest Produktion ohne Konto: REST → 401 „permission denied“, Registrierung → 422 „signup_disabled“, `admin-users` → 401, CORS nur für GitHub Pages.
   - **CLI v3:** `db push` braucht `--remote` (sonst lokaler Stack), `functions deploy` nutzt das verknüpfte Projekt; beide mit `--yes` in der CI. Auth-Einstellungen aus `config.toml` per manuellem Workflow „Supabase-Konfiguration übertragen“ (erst Vergleich, dann mit „anwenden“).
+
+- **Sync (E7)** in `src/sync/`:
+  - `abbildung.ts`: Dexie-Tabelle ↔ Server-Tabelle, `zuServer`/`vonServer`, Konfliktregel `entscheide` (lokal ausstehend: jüngerer `client_updated_at` gewinnt, Gleichstand → lokal), Pull-Überlappung 2 min.
+  - `motor.ts`: **Push** aller `ausstehend = 1` in Paketen à 100 (Upsert `user_id,id`); markiert nur als erledigt, wenn der Datensatz währenddessen nicht erneut geändert wurde; abgelehnte Zeilen (Prüfregel) werden einzeln behandelt und blockieren den Rest nicht. **Pull** je Tabelle ab Cursor (`meta: sync.cursor.<tabelle>`) seitenweise à 500, Zusammenführen in einer Dexie-Transaktion. Reihenfolge: erst Push, dann Pull. Sync schreibt direkt in Dexie (löst keinen neuen Sync aus).
+  - `dienst.ts`: Auslöser Anmeldung/Start, `online`, App wieder sichtbar, 1,5 s nach lokalen Änderungen (`beiLokalerAenderung` aus `repo.ts`), alle 60 s; nie zwei Läufe gleichzeitig; Wiederholung nach 5/15/60 s bei Netzfehlern; abgelaufene Sitzung → Hinweis.
+  - Anzeige: Symbol oben rechts in jedem Seitenkopf und im laufenden Training (✓ synchronisiert / n ausstehend mit Zähler / läuft / offline / Fehler), Detailkarte im Profil mit „Jetzt synchronisieren“, Offline-Banner.
+  - Tests: Unit mit nachgebautem Server (`testServer.ts`, gleiche LWW-Regel wie der DB-Trigger) inkl. Änderung während des Push, Offline, abgelehnter Zeile, Paging, Konflikt zweier Geräte; E2E gegen lokalen Supabase-Stack: **Training komplett offline erfassen → online → automatisch synchronisiert (Server-Stand per Admin-API geprüft) → zweites Gerät sieht es**, Löschen über Geräte hinweg, Kontowechsel nach Sync.
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).

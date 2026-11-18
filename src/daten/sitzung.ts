@@ -59,6 +59,13 @@ async function mitGeraetePruefung(anmeldung: () => Promise<{ nutzerId?: string; 
   }
 }
 
+/** Für Nicht-React-Code (Sync-Dienst): aktueller Status und Änderungen beobachten. */
+export const aktuelleSitzung = (): Sitzung => zustand;
+export function abonniereSitzung(h: () => void): () => void {
+  hoerer.add(h);
+  return () => hoerer.delete(h);
+}
+
 export function useSitzung(): Sitzung {
   return useSyncExternalStore(
     (h) => {
