@@ -1,0 +1,67 @@
+# Kanonische Fassung: trainingstracker/backup/backup.yml – liegt im Repo trainingstracker-backups
+# unter .github/workflows/backup.yml. Änderungen bitte dort UND hier übernehmen.
+name: Nächtliches Backup
+
+# Jede Nacht um 02:17 UTC (03:17/04:17 deutscher Zeit) – nicht zur vollen Stunde, da sind die Runner voll.
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Datenbank sichern, verschlüsseln, committen
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Repo holen
+        uses: actions/checkout@v7
+
+      - name: PostgreSQL-Client 17 und age installieren
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common age
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      # Keep-alive: eine Anfrage an die Supabase-API (zusätzlich zur DB-Verbindung beim Dump),
+      # damit das Free-Projekt nicht nach 7 Tagen Inaktivität pausiert.
+      - name: Supabase anpingen
+        run: curl -fsS "${{ vars.SUPABASE_URL }}/auth/v1/health" -H "apikey: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}" -o /dev/null
+
+      - name: Verschlüsselten Dump erstellen
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          AGE_RECIPIENT: ${{ vars.AGE_RECIPIENT }}
+          PG_DUMP: /usr/lib/postgresql/17/bin/pg_dump
+        run: |
+          mkdir -p taeglich monatlich
+          datum="$(date -u +%F)"
+          bash dump.sh "taeglich/stemm-${datum}.sql.gz.age"
+          # Erster Dump eines Monats wird zusätzlich als Monatsstand aufbewahrt
+          monat="monatlich/stemm-$(date -u +%Y-%m).sql.gz.age"
+          [ -f "$monat" ] || cp "taeglich/stemm-${datum}.sql.gz.age" "$monat"
+
+      - name: Alte Stände entfernen (30 Tage täglich, 12 Monate monatlich)
+        run: |
+          ls -1 taeglich/*.age | sort | head -n -30 | xargs -r rm --
+          ls -1 monatlich/*.age | sort | head -n -12 | xargs -r rm --
+          echo "Täglich: $(ls taeglich | wc -l), monatlich: $(ls monatlich | wc -l)"
+
+      # Neuer Commit OHNE Vorgeschichte (orphan) + Force-Push: Das Repo enthält immer nur die aufbewahrten
+      # Stände. So verschwinden alte (z. B. gelöschte) Daten nach Ablauf der Aufbewahrung wirklich,
+      # und das Repo wächst nicht unbegrenzt. Der tägliche Commit hält Repo und Workflow aktiv.
+      - name: Committen
+        run: |
+          git config user.name "stemm-backup[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan stand
+          git add -A
+          git commit -q -m "Backup $(date -u +%F)"
+          git push -f origin stand:main

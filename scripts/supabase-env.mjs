@@ -11,6 +11,7 @@ const werte = {
   SUPABASE_URL: erstes('API_URL'),
   SUPABASE_PUBLISHABLE_KEY: erstes('PUBLISHABLE_KEY', 'ANON_KEY'),
   SUPABASE_SECRET_KEY: erstes('SECRET_KEY', 'SERVICE_ROLE_KEY'),
+  SUPABASE_DB_URL: erstes('DB_URL'),
 };
 
 const fehlend = Object.entries(werte).filter(([, w]) => !w).map(([n]) => n);

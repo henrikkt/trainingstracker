@@ -32,6 +32,7 @@
     "playwright.config.ts",
     "supabase/tests",
     "supabase/functions/_shared/regeln.ts",
-    "supabase/functions/_shared/regeln.test.ts"
+    "supabase/functions/_shared/regeln.test.ts",
+    "scripts/*.ts"
   ]
 }
