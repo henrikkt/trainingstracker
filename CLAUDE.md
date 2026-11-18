@@ -78,6 +78,11 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
 - `supabase/tests/` – `rls.test.ts` (PGlite, lokal), `api.integration.test.ts`, `functions.integration.test.ts` (echtes Supabase; läuft nur mit `SUPABASE_URL`/`…_PUBLISHABLE_KEY`/`…_SECRET_KEY`, in CI via `scripts/supabase-env.mjs`).
 - In Codespaces: `npx supabase start` → `node scripts/supabase-env.mjs > .env.supabase` → Werte exportieren → `npm test -- supabase/tests`.
 
+## Backups
+- `backup/` – kanonische Fassung von Workflow (`backup.yml`), `dump.sh` und README des privaten Repos `henrikkt/trainingstracker-backups`; Änderungen dort übernehmen.
+- `scripts/backup-wiederherstellen.ts` (Wiederherstellung, Anleitung in `backup/README.md`), `scripts/backup-rundlauf.ts` (CI-Rundlauf).
+- Workflow-YAML vor dem Push prüfen: `npx --yes yaml@2 valid < .github/workflows/<datei>.yml`.
+
 ## Umgebungen
 - **Lokal (Windows):** kein Docker → Unit-Tests, RLS-Tests gegen PGlite (ab E6), E2E gegen Pages-Build.
 - **GitHub Codespaces** (`.devcontainer/`): Docker vorhanden → zusätzlich `npx supabase start` und E2E gegen lokalen Supabase-Stack.

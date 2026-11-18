@@ -35,7 +35,7 @@ Voraussetzung: Node.js und das Stemm-Repo (`trainingstracker`) mit `npm ci`.
    ```
 4. **Ziel-Datenbank vorbereiten**: neues Supabase-Projekt (Region Frankfurt) anlegen und das Schema einspielen:
    ```
-   npx supabase db push --db-url "postgresql://postgres.<ref>:<passwort>@<pooler-host>:5432/postgres"
+   npx supabase db push --remote="postgresql://postgres.<ref>:<passwort>@<pooler-host>:5432/postgres" --yes
    ```
 5. **Einspielen** (eine Transaktion – bei Fehlern wird nichts geändert):
    ```

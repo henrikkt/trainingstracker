@@ -33,7 +33,8 @@ jobs:
       # Keep-alive: eine Anfrage an die Supabase-API (zusätzlich zur DB-Verbindung beim Dump),
       # damit das Free-Projekt nicht nach 7 Tagen Inaktivität pausiert.
       - name: Supabase anpingen
-        run: curl -fsS "${{ vars.SUPABASE_URL }}/auth/v1/health" -H "apikey: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}" -o /dev/null
+        run: |
+          curl -fsS "${{ vars.SUPABASE_URL }}/auth/v1/health" -H "apikey: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}" -o /dev/null
 
       - name: Verschlüsselten Dump erstellen
         env:

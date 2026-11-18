@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-19 (nach E7)
+Stand: 2026-11-19 (E8 größtenteils erledigt)
 
 ## Etappen Phase 1 (MVP)
 
@@ -14,12 +14,12 @@ Stand: 2026-11-19 (nach E7)
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
 | E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | ✅ erledigt (E6a Schema/RLS · E6b Login/Einladung · E6c Functions/Admin · E6d live) |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | ✅ erledigt |
-| E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | ⏭️ als Nächstes |
+| E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | 🔄 Backup läuft ✅ · gemeinsamer Restore-Test offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Admin (du):** App auf dem Handy aktualisieren, anmelden, prüfen: Sync-Symbol oben rechts zeigt „Synchronisiert“; bisherige lokale Trainings sind danach auf dem Server.
-2. **Claude + Admin:** E8 – Backups: privates Repo `trainingstracker-backups`, age-Schlüsselpaar (privater Schlüssel nur im Passwortmanager), nächtlicher Workflow (`pg_dump` über Session-Pooler, verschlüsselt, Commit = Keep-alive), Wiederherstellungstest gemeinsam, README.
+1. **Gemeinsam:** Echter Wiederherstellungstest mit dem privaten age-Schlüssel des Admins in ein Test-Projekt „stemm-wiederherstellung“ – Schritt-für-Schritt-Anleitung steht in `backup/README.md` (Abschnitt „Wiederherstellen“); vorher kurz Testdaten in der Live-App erfassen und `gh workflow run backup.yml --repo henrikkt/trainingstracker-backups`. Ergebnis (Zeilenzahlen + Login) hier dokumentieren, Test-Projekt danach löschen.
+2. **Claude:** E9 – Härtung & Abnahme (CSP-Check im Browser, Barrierefreiheit, Lighthouse/PWA, Installation iPhone/Android, Abnahme-Checkliste).
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -100,6 +100,14 @@ Stand: 2026-11-19 (nach E7)
   - `dienst.ts`: Auslöser Anmeldung/Start, `online`, App wieder sichtbar, 1,5 s nach lokalen Änderungen (`beiLokalerAenderung` aus `repo.ts`), alle 60 s; nie zwei Läufe gleichzeitig; Wiederholung nach 5/15/60 s bei Netzfehlern; abgelaufene Sitzung → Hinweis.
   - Anzeige: Symbol oben rechts in jedem Seitenkopf und im laufenden Training (✓ synchronisiert / n ausstehend mit Zähler / läuft / offline / Fehler), Detailkarte im Profil mit „Jetzt synchronisieren“, Offline-Banner.
   - Tests: Unit mit nachgebautem Server (`testServer.ts`, gleiche LWW-Regel wie der DB-Trigger) inkl. Änderung während des Push, Offline, abgelehnter Zeile, Paging, Konflikt zweier Geräte; E2E gegen lokalen Supabase-Stack: **Training komplett offline erfassen → online → automatisch synchronisiert (Server-Stand per Admin-API geprüft) → zweites Gerät sieht es**, Löschen über Geräte hinweg, Kontowechsel nach Sync.
+
+- **Backups (E8):**
+  - Privates Repo `henrikkt/trainingstracker-backups` mit Workflow „Nächtliches Backup“ (02:17 UTC): Keep-alive-Ping an Supabase, `backup/dump.sh` (pg_dump 17 über den **Session-Pooler** → nur Daten: `auth.users`, `auth.identities`, `public.*` als `--column-inserts`, gzip, **age** für `vars.AGE_RECIPIENT`), 30 Tage täglich + 12 Monate monatlich, **Orphan-Commit + Force-Push** (Historie enthält nur aufbewahrte Stände → gelöschte Daten verschwinden nach Ablauf wirklich; täglicher Commit hält Repo aktiv). Erster Lauf 18.11.2026 erfolgreich.
+  - Kanonische Fassung von Workflow, `dump.sh` und README in `backup/` dieses Repos – Änderungen ins Backup-Repo übernehmen (YAML vorher prüfen: `npx --yes yaml@2 valid < datei`).
+  - Backup-Repo: Secret `SUPABASE_DB_URL` (Session-Pooler-URI), Variablen `AGE_RECIPIENT` (age1rkhh…), `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`. Privater Schlüssel **nur** im Passwortmanager (am 18.11.2026 neu erzeugt; ein älterer Schlüssel ist verworfen).
+  - Wiederherstellung: `scripts/backup-wiederherstellen.ts` (Node, ohne psql/age-Programm): entschlüsseln, prüfen, in **einer** Transaktion einspielen; verweigert die Produktions-DB ohne `--auch-produktion`.
+  - **Automatischer Rundlauf in der CI** (`scripts/backup-rundlauf.ts`): Daten anlegen → Dump mit Wegwerf-Schlüssel → `db reset` (Totalverlust) → Wiederherstellung → Login mit altem Passwort + identische Trainingsdaten.
+  - Datenbank-Passwort am 18.11.2026 geändert; GitHub-Secret `SUPABASE_DB_PASSWORD` im App-Repo aktualisiert.
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).
