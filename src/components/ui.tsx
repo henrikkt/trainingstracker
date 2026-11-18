@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import { ChevronLeft, type LucideIcon } from 'lucide-react';
+import { Link, NavLink } from 'react-router';
 
 type KnopfVariante = 'primaer' | 'sekundaer' | 'leise';
 
@@ -39,13 +40,61 @@ export function Karte({ children, className = '' }: { children: ReactNode; class
   return <section className={`rounded-3xl bg-flaeche p-5 ${className}`}>{children}</section>;
 }
 
-/** Seitenkopf mit großer, schmaler Überschrift. */
-export function SeitenKopf({ titel, unterzeile }: { titel: string; unterzeile?: string }) {
+/** Seitenkopf mit großer, schmaler Überschrift; optional Zurück-Link und Aktion rechts. */
+export function SeitenKopf({ titel, unterzeile, zurueck, aktion }: { titel: string; unterzeile?: string; zurueck?: string; aktion?: ReactNode }) {
   return (
     <header className="pt-sicher pb-5 md:pt-10">
-      <h1 className="font-display text-4xl font-extrabold tracking-tight uppercase">{titel}</h1>
+      {zurueck && (
+        <Link to={zurueck} className="-ml-2 mb-1 inline-flex min-h-11 items-center gap-1 rounded-xl pr-3 pl-1 text-sm font-semibold text-text-leise hover:text-text">
+          <ChevronLeft aria-hidden size={20} /> Zurück
+        </Link>
+      )}
+      <div className="flex items-end gap-3">
+        <h1 className="min-w-0 flex-1 font-display text-4xl font-extrabold tracking-tight break-words uppercase">{titel}</h1>
+        {aktion}
+      </div>
       {unterzeile && <p className="mt-1 text-text-leise">{unterzeile}</p>}
     </header>
+  );
+}
+
+/** Reiter innerhalb einer Seite (z. B. Vorlagen | Übungen). */
+export function Reiter({ ziele }: { ziele: readonly { pfad: string; text: string; ende?: boolean }[] }) {
+  return (
+    <nav aria-label="Bereich" className="mb-4 flex gap-1 rounded-2xl bg-flaeche p-1">
+      {ziele.map((z) => (
+        <NavLink
+          key={z.pfad}
+          to={z.pfad}
+          end={z.ende}
+          className={({ isActive }) =>
+            `flex min-h-11 flex-1 items-center justify-center rounded-xl text-sm font-bold transition-colors ${
+              isActive ? 'bg-flaeche-hoch text-text' : 'text-text-leise hover:text-text'
+            }`
+          }
+        >
+          {z.text}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+/** Runder Icon-Knopf (48 px) mit Pflicht-Beschriftung für Screenreader. */
+export function IconKnopf({ icon: Icon, label, onClick, disabled, gefahr }: { icon: LucideIcon; label: string; onClick: () => void; disabled?: boolean; gefahr?: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors hover:bg-flaeche-hoch disabled:opacity-30 ${
+        gefahr ? 'text-fehler' : 'text-text-leise hover:text-text'
+      }`}
+    >
+      <Icon aria-hidden size={22} />
+    </button>
   );
 }
 

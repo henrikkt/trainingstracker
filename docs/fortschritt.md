@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-18
+Stand: 2026-11-18 (nach E3)
 
 ## Etappen Phase 1 (MVP)
 
@@ -9,8 +9,8 @@ Stand: 2026-11-18
 | E0 | Gerüst: Vite/React/TS, Tailwind, Vitest, Playwright, CI + Pages-Deploy, Dependabot, Devcontainer, Doku | ✅ erledigt |
 | E1 | Design-System & App-Hülle (Navigation, Manifest, Icons, Service Worker, installierbar) | ✅ erledigt |
 | E2 | Domänenlogik: Übungskatalog (~70), Progression, e1RM, PRs, Volumen (reine Funktionen + Tests) | ✅ erledigt |
-| E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ⏭️ als Nächstes |
-| E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | offen |
+| E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
+| E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ⏭️ als Nächstes |
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | offen |
 | E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | offen |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
@@ -18,7 +18,13 @@ Stand: 2026-11-18
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Claude:** E3 – Dexie-Schema (Trainings, Vorlagen, eigene Übungen, Übungseinstellungen, Körpergewicht; Felder `updated_at`/`client_updated_at`/`deleted_at` schon für den Sync vorgesehen), `navigator.storage.persist()`, Übungskatalog-Ansicht mit Suche und Filter, eigene Übungen anlegen, Vorlagen anlegen/bearbeiten, Übungseinstellungen (Steigerung, Pause, Wdh.-Bereich).
+1. **Claude:** E4 – Training erfassen:
+   - Start aus Vorlage oder frei; laufendes Training als `trainings`-Datensatz ohne `ende` (jede Eingabe sofort gespeichert, nach Neuladen fortsetzen)
+   - pro Satz Gewicht/Wdh. (Stepper, Schritt aus Profil), optional RIR/RPE und Notiz, Abhaken mit einem Tipp
+   - „Letztes Mal“ (`fasseSaetzeZusammen`) und Vorschlag (`vorschlagFuerNaechstesMal`) pro Übung, Sätze mit Vorschlag vorbelegt
+   - Pausentimer nach Abhaken (Endzeitpunkt gespeichert, Vibration/Ton, Wake Lock)
+   - Übungen im Training hinzufügen/entfernen, Sätze hinzufügen/entfernen
+   - Abschluss mit Zusammenfassung (Dauer, Volumen, neue Rekorde), Liste der letzten Trainings auf der Training-Seite
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -43,6 +49,13 @@ Stand: 2026-11-18
   - Wochen-Volumen: Sätze (Hauptmuskel 1, Nebenmuskeln je 0,5) und kg × Wdh. (nur Hauptmuskel), ISO-Wochen in lokaler Zeit.
   - Zeitbasierte Übungen (Plank, Farmer's Walk) bewusst weggelassen – das Datenmodell kennt nur Gewicht × Wdh.
 
+- **Lokale Daten (E3)** in `src/daten/`: Dexie-DB `stemm` (Version 1). Sync-Metadaten heißen lokal `aktualisiertUm`/`geloeschtUm`/`ausstehend` (0/1) und werden in E7 auf `client_updated_at`/`deleted_at` abgebildet. Alle Schreibzugriffe über `repo.ts` (setzt Metadaten), Lesen über Hooks in `hooks.ts` (`useLiveQuery`).
+- **Vorlagen-Editor speichert sofort** bei jeder Änderung (kein Speichern-Knopf); lokaler Entwurf verhindert, dass schnelles Tippen von verzögerten DB-Updates überschrieben wird.
+- **Beispielvorlagen** (Push, Pull, Beine, Ganzkörper A/B) werden als Kopie mit neuer ID übernommen.
+- **Übungseinstellungen:** Steigerung (kg oder Wdh.), Wdh.-Bereich (für freie Trainings; Vorlagen haben eigene Ziele), Pause. Profil-Standards: 120 s Pause, RIR, 2,5-kg-Schritte.
+- **`navigator.storage.persist()`** beim App-Start; Status im Profil sichtbar.
+
 ## Offene Punkte / Merker
+- Gelöschte eigene Übungen sind nur weich gelöscht: Verlauf/Statistik (E4/E5) muss sie für alte Trainings weiterhin finden (Lookup inkl. gelöschter Einträge).
 - Vor E6: Supabase-Konto anlegen (Anleitung folgt in E6).
 - Vor E8: age installieren (`winget install FiloSottile.age`), Schlüssel selbst erzeugen, privaten Schlüssel in den Passwortmanager.

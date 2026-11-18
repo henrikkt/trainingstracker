@@ -94,6 +94,45 @@ export interface TrainingsUebung {
   saetze: Satz[];
 }
 
+export interface VorlagenUebung {
+  uebungId: string;
+  ziel: UebungsZiel;
+}
+
+/** Trainingsplan-Vorlage, z. B. „Push“ oder „Ganzkörper A“. */
+export interface Vorlage {
+  id: string;
+  name: string;
+  uebungen: VorlagenUebung[];
+}
+
+/** Persönliche Einstellungen pro Übung; nicht gesetzte Felder → Standardwerte. */
+export interface UebungsEinstellung {
+  uebungId: string;
+  steigerung?: Steigerung;
+  pauseSek?: number;
+  wdhBereich?: WdhBereich;
+}
+
+export type Intensitaet = 'rir' | 'rpe';
+
+/** Allgemeine Einstellungen der Person. */
+export interface ProfilEinstellungen {
+  /** Standard-Pausendauer in Sekunden */
+  pauseSek: number;
+  /** RIR (Reps in Reserve) oder RPE (Rate of Perceived Exertion) erfassen */
+  intensitaet: Intensitaet;
+  /** Schrittweite der +/–-Knöpfe beim Gewicht */
+  gewichtsSchritt: number;
+}
+
+export interface KoerpergewichtEintrag {
+  id: string;
+  /** Kalendertag YYYY-MM-DD */
+  datum: string;
+  kg: number;
+}
+
 export interface Training {
   id: string;
   /** Startzeitpunkt (ISO). */
