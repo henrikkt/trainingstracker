@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-18 (nach E3)
+Stand: 2026-11-18 (nach E4)
 
 ## Etappen Phase 1 (MVP)
 
@@ -10,21 +10,21 @@ Stand: 2026-11-18 (nach E3)
 | E1 | Design-System & App-Hülle (Navigation, Manifest, Icons, Service Worker, installierbar) | ✅ erledigt |
 | E2 | Domänenlogik: Übungskatalog (~70), Progression, e1RM, PRs, Volumen (reine Funktionen + Tests) | ✅ erledigt |
 | E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
-| E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ⏭️ als Nächstes |
-| E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | offen |
+| E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
+| E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ⏭️ als Nächstes |
 | E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | offen |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
 | E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Claude:** E4 – Training erfassen:
-   - Start aus Vorlage oder frei; laufendes Training als `trainings`-Datensatz ohne `ende` (jede Eingabe sofort gespeichert, nach Neuladen fortsetzen)
-   - pro Satz Gewicht/Wdh. (Stepper, Schritt aus Profil), optional RIR/RPE und Notiz, Abhaken mit einem Tipp
-   - „Letztes Mal“ (`fasseSaetzeZusammen`) und Vorschlag (`vorschlagFuerNaechstesMal`) pro Übung, Sätze mit Vorschlag vorbelegt
-   - Pausentimer nach Abhaken (Endzeitpunkt gespeichert, Vibration/Ton, Wake Lock)
-   - Übungen im Training hinzufügen/entfernen, Sätze hinzufügen/entfernen
-   - Abschluss mit Zusammenfassung (Dauer, Volumen, neue Rekorde), Liste der letzten Trainings auf der Training-Seite
+1. **Claude:** E5 – Fortschritt & Export:
+   - Verlauf pro Übung als Diagramm (e1RM, Top-Satz, Volumen) – `verlaufFuerUebung`, Recharts lazy geladen
+   - Persönliche Rekorde mit Datum (`rekordeFuerUebung`)
+   - Trainingskalender (Monatsansicht mit markierten Tagen) und Wochen-Volumen pro Muskelgruppe (`wochenVolumenProMuskelgruppe`)
+   - Körpergewicht-Verlauf (Tabelle `koerpergewicht` existiert schon)
+   - Export CSV (ein Satz pro Zeile) und JSON (alles) im Profil
+   - Übungsnamen über `useUebungsNachschlag` (inkl. gelöschter eigener Übungen)
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -55,7 +55,17 @@ Stand: 2026-11-18 (nach E3)
 - **Übungseinstellungen:** Steigerung (kg oder Wdh.), Wdh.-Bereich (für freie Trainings; Vorlagen haben eigene Ziele), Pause. Profil-Standards: 120 s Pause, RIR, 2,5-kg-Schritte.
 - **`navigator.storage.persist()`** beim App-Start; Status im Profil sichtbar.
 
+- **Training erfassen (E4):**
+  - Es gibt höchstens ein laufendes Training (`trainings`-Datensatz ohne `ende`), Route `/training/laufend`. Jede Eingabe wird sofort gespeichert; nach Neuladen geht es an derselben Stelle weiter.
+  - Start aus Vorlage oder frei; Sätze werden mit dem Vorschlag vorbelegt (erstes Mal: 0 kg). Ziel einer frei hinzugefügten Übung: 3 Sätze im persönlichen/Standard-Wdh.-Bereich.
+  - Bedienung: Der aktuelle Satz ist groß aufgeklappt (Gewicht/Wdh. mit –/+, RIR- bzw. RPE-Chips, Notiz, „Satz abhaken“), die übrigen Sätze sind kompakte Zeilen mit Haken zum Abhaken mit einem Tipp. Nach dem Abhaken springt die App zum nächsten offenen Satz und scrollt ihn in den sichtbaren Bereich.
+  - **Abweichung:** Ein geändertes Gewicht wird automatisch in die folgenden offenen Sätze mit bisher gleichem Gewicht übernommen (sonst müsste man beim ersten Mal jeden Satz einzeln von 0 kg hochstellen).
+  - Pausentimer startet nach dem Abhaken (Pause der Übung bzw. Profil-Standard), speichert den Endzeitpunkt in localStorage (überlebt Neuladen), ±15 s, Vibration (nur Android) + 3 Pieptöne (Ton wird beim Abhaken per Nutzer-Geste entsperrt). Liegt das Ende beim Zurückkehren schon über 6 s zurück, wird nicht mehr nachträglich gepiept.
+  - Wake Lock hält den Bildschirm während des Trainings an.
+  - Beenden: nicht abgehakte Sätze und leere Übungen werden verworfen (mit Rückfrage); ohne erledigten Satz wird das Training verworfen. Zusammenfassung mit Dauer, Volumen, Sätzen, neuen Rekorden (gold) und Übungen.
+
 ## Offene Punkte / Merker
+- iPhone: Ton am Pausenende nur, solange die App im Vordergrund ist; Vibration gibt es dort nicht (Browser-Grenze).
 - Gelöschte eigene Übungen sind nur weich gelöscht: Verlauf/Statistik (E4/E5) muss sie für alte Trainings weiterhin finden (Lookup inkl. gelöschter Einträge).
 - Vor E6: Supabase-Konto anlegen (Anleitung folgt in E6).
 - Vor E8: age installieren (`winget install FiloSottile.age`), Schlüssel selbst erzeugen, privaten Schlüssel in den Passwortmanager.

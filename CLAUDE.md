@@ -38,7 +38,7 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 | `npm run typecheck` / `npm test` | einzeln |
 | `npm run build:pages` | Produktions-Build für GitHub Pages (base `/trainingstracker/`) |
 | `npm run test:e2e` | Playwright gegen den Pages-Build (vorher `npm run build:pages`); lokal mit Edge, in CI/Codespaces mit `PW_CHANNEL=` + Chromium |
-| `SCREENSHOTS=1 npx playwright test screenshots` | Screenshots Handy + Desktop nach `e2e/screenshots/` (Seiten per `SCREENSHOTS_SEITEN=training,plaene`) |
+| `SCREENSHOTS=1 npx playwright test screenshots` | Screenshots Handy + Desktop nach `e2e/screenshots/` (Seiten per `SCREENSHOTS_SEITEN=training,plaene`; `live` = laufendes Training mit Pause) |
 | `npx pwa-assets-generator` | App-Icons aus `public/favicon.svg` neu erzeugen |
 | `npm run preview:pages` | Pages-Build lokal ansehen (http://localhost:4174/trainingstracker/) |
 
@@ -51,8 +51,9 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
   - `Stepper.tsx` (–/+ mit editierbarem Wert), `Auswahl.tsx` (`Segment`, `Chip`, `AuswahlFeld`, `TextFeld`)
   - `Vollbild.tsx` (Dialog), `UebungsListe.tsx` (Suche + Filter), `UebungsAuswahl.tsx` (Mehrfachauswahl), `EigeneUebungFormular.tsx`
 - `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
-- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/fortschritt`, `/profil`
-- `src/hooks/` – React-Hooks; `src/lib/` – kleine reine Hilfsfunktionen (Formatierung, Kontrast)
+- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/profil`
+- `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
+- `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`)
 - `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:
   - `typen.ts` (Übung, Satz, Training, Muskelgruppen, Geräte)
   - `katalog.ts` (70 Übungen, Suche) – **IDs nie ändern**
@@ -60,6 +61,8 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
   - `progression.ts` (Vorschlag fürs nächste Mal; Regeln im Dateikopf)
   - `kennzahlen.ts` (e1RM Epley, Volumen, Verlauf, ISO-Woche, Wochen-Volumen pro Muskelgruppe)
   - `rekorde.ts` (PRs, neue Rekorde eines Trainings), `letztesMal.ts` („3 × 8 × 80 kg“)
+  - `einstellungen.ts` (Profil-Standards, effektive Übungseinstellungen), `beispielVorlagen.ts`
+  - `training.ts` (Erfassen: `planeUebung`, Sätze vorbelegen/ändern/abhaken, `naechsterOffenerSatz`, `abschliessen`, `zusammenfassen`)
   - `testhilfen.ts` – `s(kg, wdh)` und `training(datum, {uebungId: saetze})` für Tests
 
 ## Umgebungen

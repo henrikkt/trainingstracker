@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useMemo } from 'react';
 import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
-import { KATALOG } from '../domain/katalog.ts';
-import type { ProfilEinstellungen, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
+import { findeUebung, KATALOG } from '../domain/katalog.ts';
+import type { ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
 import { db } from './db.ts';
-import { istAktiv, leseProfil, ohneMeta } from './repo.ts';
+import { alleTrainings, istAktiv, leseProfil, ohneMeta } from './repo.ts';
 
 /** Reaktive Lesezugriffe: Komponenten aktualisieren sich automatisch bei jeder Änderung in IndexedDB. */
 
@@ -41,6 +42,28 @@ export function useUebungsEinstellung(uebungId: string | undefined): UebungsEins
 export function useAlleUebungsEinstellungen(): Map<string, UebungsEinstellung> {
   const liste = useLiveQuery(async () => (await db.uebungsEinstellungen.toArray()).filter(istAktiv).map((e) => ohneMeta<UebungsEinstellung>(e)));
   return new Map((liste ?? []).map((e) => [e.uebungId, e]));
+}
+
+/** Alle nicht gelöschten Trainings (inkl. laufendem), neueste zuerst. undefined = lädt noch. */
+export function useTrainings(): Training[] | undefined {
+  return useLiveQuery(async () => (await alleTrainings()).sort((a, b) => b.start.localeCompare(a.start)));
+}
+
+/** undefined = lädt noch, null = gibt es nicht (mehr) */
+export function useTraining(id: string | undefined): Training | null | undefined {
+  return useLiveQuery(async () => {
+    const t = id ? await db.trainings.get(id) : undefined;
+    return t && istAktiv(t) ? ohneMeta<Training>(t) : null;
+  }, [id]);
+}
+
+/**
+ * Nachschlagen von Übungen für Anzeige und Statistik – inklusive gelöschter eigener Übungen,
+ * damit alte Trainings ihre Übungsnamen behalten.
+ */
+export function useUebungsNachschlag(): (id: string) => Uebung | undefined {
+  const alleEigenen = useLiveQuery(async () => (await db.eigeneUebungen.toArray()).map((u) => ohneMeta<Uebung>(u)));
+  return useMemo(() => (id: string) => findeUebung(id, alleEigenen ?? []), [alleEigenen]);
 }
 
 export function useProfil(): ProfilEinstellungen {

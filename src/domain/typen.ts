@@ -140,6 +140,8 @@ export interface Training {
   /** Endzeitpunkt (ISO); fehlt, solange das Training läuft. */
   ende?: string;
   vorlageId?: string;
+  /** Anzeigename, z. B. Name der Vorlage beim Start oder „Freies Training“ */
+  titel?: string;
   notiz?: string;
   uebungen: TrainingsUebung[];
 }

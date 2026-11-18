@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
 import { db } from './db.ts';
 import {
+  alleTrainings,
   istAktiv,
+  laufendesTraining,
+  loescheTraining,
+  speichereTraining,
+  starteTraining,
   leseProfil,
   loescheEigeneUebung,
   loescheVorlage,
@@ -56,6 +61,38 @@ describe('Weiches Löschen', () => {
     expect(await db.eigeneUebungen.get('e1')).toMatchObject({ eigene: true });
     await loescheEigeneUebung('e1');
     expect(istAktiv((await db.eigeneUebungen.get('e1'))!)).toBe(false);
+  });
+});
+
+describe('Training starten', () => {
+  it('aus Vorlage: Übungen mit Ziel, Sätze vorbelegt, Titel = Vorlagenname', async () => {
+    const vid = await uebernimmBeispielVorlage('beine');
+    const vorlage = ohneMeta((await db.vorlagen.get(vid))!);
+    const id = await starteTraining(vorlage);
+    const t = await laufendesTraining();
+    expect(t).toMatchObject({ id, titel: 'Beine', vorlageId: vid });
+    expect(t!.ende).toBeUndefined();
+    expect(t!.uebungen).toHaveLength(5);
+    expect(t!.uebungen[0]).toMatchObject({ uebungId: 'kniebeuge', ziel: { saetze: 3, wdh: { min: 5, max: 8 } } });
+    expect(t!.uebungen[0]!.saetze).toHaveLength(3);
+  });
+
+  it('startet nie ein zweites laufendes Training', async () => {
+    const a = await starteTraining();
+    const b = await starteTraining();
+    expect(b).toBe(a);
+    expect(await alleTrainings()).toHaveLength(1);
+  });
+
+  it('belegt mit dem Vorschlag aus dem letzten abgeschlossenen Training vor', async () => {
+    const satz = { gewicht: 100, wdh: 8, erledigt: true };
+    await speichereTraining({ id: 'alt', start: '2026-11-01T17:00:00.000Z', ende: '2026-11-01T18:00:00.000Z', uebungen: [{ uebungId: 'kniebeuge', saetze: [satz, satz, satz] }] });
+    await speichereVorlage({ id: 'v', name: 'Nur Kniebeugen', uebungen: [{ uebungId: 'kniebeuge', ziel: { saetze: 3, wdh: { min: 5, max: 8 } } }] });
+    await starteTraining(ohneMeta((await db.vorlagen.get('v'))!));
+    const t = await laufendesTraining();
+    expect(t!.uebungen[0]!.saetze[0]).toEqual({ gewicht: 105, wdh: 5, erledigt: false });
+    await loescheTraining(t!.id);
+    expect(await laufendesTraining()).toBeUndefined();
   });
 });
 
