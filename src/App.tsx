@@ -1,22 +1,32 @@
-import { formatiereGewicht } from './lib/format.ts';
+import { Navigate, Route, Routes } from 'react-router';
+import { AppRahmen } from './components/AppRahmen.tsx';
+import { EigeneUebungNeuSeite } from './seiten/EigeneUebungNeuSeite.tsx';
+import { FortschrittSeite } from './seiten/FortschrittSeite.tsx';
+import { PlaeneSeite } from './seiten/PlaeneSeite.tsx';
+import { ProfilSeite } from './seiten/ProfilSeite.tsx';
+import { LiveTrainingSeite } from './seiten/LiveTrainingSeite.tsx';
+import { TrainingDetailSeite } from './seiten/TrainingDetailSeite.tsx';
+import { TrainingSeite } from './seiten/TrainingSeite.tsx';
+import { UebungenSeite } from './seiten/UebungenSeite.tsx';
+import { UebungSeite } from './seiten/UebungSeite.tsx';
+import { VorlageSeite } from './seiten/VorlageSeite.tsx';
 
-/** Platzhalter bis Etappe E1 (App-Hülle mit Navigation). */
 export function App() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
-      <h1 className="text-6xl font-black tracking-tight">
-        Stemm<span className="text-akzent">.</span>
-      </h1>
-      <p className="text-text-leise">Dein Trainingstracker fürs Studio – bald geht's los.</p>
-      <p className="rounded-2xl bg-flaeche px-5 py-3 text-lg tabular-nums">
-        Letztes Mal: 3 × 8 × {formatiereGewicht(80)}
-      </p>
-      <button
-        type="button"
-        className="min-h-14 w-full rounded-2xl bg-akzent px-6 text-lg font-bold text-akzent-text active:scale-[0.98]"
-      >
-        Training starten
-      </button>
-    </main>
+    <Routes>
+      <Route element={<AppRahmen />}>
+        <Route path="/training" element={<TrainingSeite />} />
+        <Route path="/training/laufend" element={<LiveTrainingSeite />} />
+        <Route path="/training/:id" element={<TrainingDetailSeite />} />
+        <Route path="/plaene" element={<PlaeneSeite />} />
+        <Route path="/plaene/vorlagen/:id" element={<VorlageSeite />} />
+        <Route path="/plaene/uebungen" element={<UebungenSeite />} />
+        <Route path="/plaene/uebungen/neu" element={<EigeneUebungNeuSeite />} />
+        <Route path="/plaene/uebungen/:id" element={<UebungSeite />} />
+        <Route path="/fortschritt" element={<FortschrittSeite />} />
+        <Route path="/profil" element={<ProfilSeite />} />
+        <Route path="*" element={<Navigate to="/training" replace />} />
+      </Route>
+    </Routes>
   );
 }

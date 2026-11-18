@@ -26,6 +26,10 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - **Keine Secrets und keine persönlichen Daten** im Code oder Git-Verlauf. Öffentlich sind nur `VITE_SUPABASE_URL` und `VITE_SUPABASE_ANON_KEY` (Repository-Variablen). Alles andere in GitHub Secrets bzw. bei Supabase.
 - Git: Identität nur lokal im Repo (GitHub-Noreply-Adresse). Nach jeder Etappe ein Commit; vorher müssen `npm run check` (Typecheck + Unit-Tests) grün sein, E2E möglichst auch.
 - Screenshots sparsam: pro Prüfung nur Handy (375 px) und Desktop.
+- Dexie-Schema nie in bestehenden Versionen ändern, sondern `this.version(n+1)` ergänzen.
+- Teil-Änderungen an bestehenden Datensätzen (Profil, Einstellungen) nur über `aktualisiere…`-Funktionen (Transaktion), nie `{...hookWert, ...aenderung}` speichern.
+- E2E: vor `page.reload()` immer `await gespeichert(page)` (wartet auf `html[data-schreibt="0"]`). Vor dem Commit auch mit Chromium testen: `CI=true PW_CHANNEL= npx playwright test`.
+- E2E-Selektoren: Stepper-Felder per `getByRole('textbox', { name, exact: true })` (die –/+-Knöpfe enthalten den Feldnamen); Listen mit `aria-label` eindeutig machen.
 - `docs/fortschritt.md` und diese Datei nach jeder Etappe aktualisieren.
 
 ## Befehle
@@ -36,9 +40,32 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 | `npm run typecheck` / `npm test` | einzeln |
 | `npm run build:pages` | Produktions-Build für GitHub Pages (base `/trainingstracker/`) |
 | `npm run test:e2e` | Playwright gegen den Pages-Build (vorher `npm run build:pages`); lokal mit Edge, in CI/Codespaces mit `PW_CHANNEL=` + Chromium |
+| `SCREENSHOTS=1 npx playwright test screenshots` | Screenshots Handy + Desktop nach `e2e/screenshots/` (Seiten per `SCREENSHOTS_SEITEN=training,plaene`; `live` = laufendes Training mit Pause) |
+| `npx pwa-assets-generator` | App-Icons aus `public/favicon.svg` neu erzeugen |
 | `npm run preview:pages` | Pages-Build lokal ansehen (http://localhost:4174/trainingstracker/) |
 
 Ports 5174/4174 (nicht 5173/4173), damit es nicht mit dem Urlaubsplaner kollidiert.
+Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs` umgeht den Windows-Laufwerksbuchstaben-Fehler.
+
+## Code-Struktur
+- `src/components/` – App-Rahmen, Navigation, UI-Bausteine:
+  - `ui.tsx`: `Knopf`, `Karte`, `SeitenKopf` (mit `zurueck`/`aktion`), `Reiter`, `IconKnopf`, `LeererZustand`
+  - `Stepper.tsx` (–/+ mit editierbarem Wert), `Auswahl.tsx` (`Segment`, `Chip`, `AuswahlFeld`, `TextFeld`)
+  - `Vollbild.tsx` (Dialog), `UebungsListe.tsx` (Suche + Filter), `UebungsAuswahl.tsx` (Mehrfachauswahl), `EigeneUebungFormular.tsx`
+- `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
+- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/profil`
+- `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
+- `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`)
+- `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:
+  - `typen.ts` (Übung, Satz, Training, Muskelgruppen, Geräte)
+  - `katalog.ts` (70 Übungen, Suche) – **IDs nie ändern**
+  - `steigerung.ts` (Standard-Steigerung je Übungstyp)
+  - `progression.ts` (Vorschlag fürs nächste Mal; Regeln im Dateikopf)
+  - `kennzahlen.ts` (e1RM Epley, Volumen, Verlauf, ISO-Woche, Wochen-Volumen pro Muskelgruppe)
+  - `rekorde.ts` (PRs, neue Rekorde eines Trainings), `letztesMal.ts` („3 × 8 × 80 kg“)
+  - `einstellungen.ts` (Profil-Standards, effektive Übungseinstellungen), `beispielVorlagen.ts`
+  - `training.ts` (Erfassen: `planeUebung`, Sätze vorbelegen/ändern/abhaken, `naechsterOffenerSatz`, `abschliessen`, `zusammenfassen`)
+  - `testhilfen.ts` – `s(kg, wdh)` und `training(datum, {uebungId: saetze})` für Tests
 
 ## Umgebungen
 - **Lokal (Windows):** kein Docker → Unit-Tests, RLS-Tests gegen PGlite (ab E6), E2E gegen Pages-Build.
