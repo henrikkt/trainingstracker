@@ -77,15 +77,23 @@ Stand: 2026-11-18 (nach E5)
 - **E2E-Testdaten** werden mit `legeTrainingsAn` (`e2e/hilfen.ts`) direkt in IndexedDB geschrieben. Screenshots mit Beispieldaten: `SCREENSHOTS=1 SCREENSHOTS_DATEN=1 SCREENSHOTS_SEITEN=fortschritt npx playwright test screenshots`.
 
 ## GitHub-Sicherheitseinstellungen
+Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).
+
 | Einstellung | Stand |
 |---|---|
-| Ruleset „main schützen“ (nur Force-Push und Löschen blockiert, keine PR-/Check-Pflicht) | ⏳ wartet auf `gh` |
-| Dependabot security updates an, gruppierte Security-Updates aus | ⏳ wartet auf `gh` |
-| Code scanning: CodeQL Default setup (JavaScript/TypeScript) | ⏳ wartet auf `gh` |
-| Dependabot-Meldung `minimatch` behoben (`overrides`) | ✅ |
+| Ruleset „main schützen“ (ID 27585507): aktiv auf dem Standard-Branch, blockiert nur Löschen (`deletion`) und Force-Push (`non_fast_forward`); keine PR- oder Status-Check-Pflicht, keine Ausnahmen | ✅ |
+| Dependabot alerts (`vulnerability-alerts`) | ✅ an |
+| Dependabot security updates (`automated-security-fixes`) | ✅ an, nicht pausiert |
+| Gruppierte Security-Updates | aus: `dependabot.yml` gruppiert nur Versions-Updates (kein `applies-to: security-updates`); der gleichnamige Schalter in den Repo-Einstellungen ist per API nicht lesbar → einmal manuell prüfen |
+| Code scanning: CodeQL **Default setup**, Sprache `javascript-typescript`, Query-Suite `default` | ✅ (kein eigener Workflow nötig); erste Analyse 2026-11-18: 0 Funde |
+| Secret scanning + Push protection | ✅ an (Standard bei öffentlichen Repos) |
+| Dependabot-Meldung `minimatch` | ✅ behoben (`overrides`), keine offenen Dependabot-Meldungen |
 | Dependabot version updates (`.github/dependabot.yml`: npm, Actions, Devcontainer) | ✅ seit E0 |
 
+Prüfen: `gh api repos/henrikkt/trainingstracker/rulesets`, `…/code-scanning/default-setup`, `…/automated-security-fixes`, `…/dependabot/alerts?state=open`.
+
 ## Offene Punkte / Merker
+- Beim Mergen von Dependabot-PRs auf Konflikte achten: Nach dem Merge von #1/#2 war der `features`-Block in `.devcontainer/devcontainer.json` leer (repariert in c90d63a).
 - Hauptpaket ist auf ~142 kB gzip gewachsen (Dexie, Router, Icons). Bei Bedarf in E9 prüfen (z. B. Seiten per lazy laden).
 - iPhone: Ton am Pausenende nur, solange die App im Vordergrund ist; Vibration gibt es dort nicht (Browser-Grenze).
 - Gelöschte eigene Übungen sind nur weich gelöscht: Verlauf/Statistik (E4/E5) muss sie für alte Trainings weiterhin finden (Lookup inkl. gelöschter Einträge).
