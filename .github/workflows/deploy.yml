@@ -42,21 +42,33 @@ jobs:
       - name: Unit-Tests
         run: npm test
 
-      - name: Build (GitHub Pages)
+      # Die E2E-Tests dieses Jobs prüfen die App im lokalen Modus (ohne Backend). Login, Einladung,
+      # Verwaltung usw. testet der Job „Datenbank und Zugriffsregeln“ gegen einen lokalen Supabase-Stack.
+      - name: Build ohne Backend (lokaler Modus) für die E2E-Tests
         run: npm run build:pages
-        env:
-          # Öffentliche Werte (ab E6 als Repository-Variablen gesetzt, nicht als Secrets nötig)
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Playwright-Browser installieren
         run: npx playwright install --with-deps chromium
 
-      - name: End-to-End-Tests
+      - name: End-to-End-Tests (lokaler Modus)
         run: npm run test:e2e
         env:
           CI: 'true'
           PW_CHANNEL: ''
+
+      - name: Build für GitHub Pages (mit Supabase-Anbindung)
+        run: npm run build:pages
+        env:
+          # Öffentliche Werte (Repository-Variablen, keine Secrets)
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      # Schutz davor, versehentlich eine App ohne Server-Anbindung zu veröffentlichen
+      - name: Prüfen, dass Supabase-Anbindung und CSP im Build stecken
+        if: vars.VITE_SUPABASE_URL != ''
+        run: |
+          grep -rqF "${{ vars.VITE_SUPABASE_URL }}" dist/assets || { echo "::error::Supabase-URL fehlt im JavaScript-Build"; exit 1; }
+          grep -qF "${{ vars.VITE_SUPABASE_URL }} wss://" dist/index.html || { echo "::error::Supabase-URL fehlt in der CSP"; exit 1; }
 
       - name: Artefakt für Pages hochladen
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
