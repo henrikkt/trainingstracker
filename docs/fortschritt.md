@@ -12,7 +12,7 @@ Stand: 2026-11-18 (nach E5)
 | E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
 | E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
-| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | ⏭️ als Nächstes |
+| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | 🔄 E6a ✅ (Schema, RLS, Tests) · E6b–d offen |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
 | E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
@@ -91,6 +91,14 @@ Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `hen
 | Dependabot version updates (`.github/dependabot.yml`: npm, Actions, Devcontainer) | ✅ seit E0 |
 
 Prüfen: `gh api repos/henrikkt/trainingstracker/rulesets`, `…/code-scanning/default-setup`, `…/automated-security-fixes`, `…/dependabot/alerts?state=open`.
+
+- **Supabase-Schema (E6a)** in `supabase/migrations/`: **alle sechs Tabellen haben dieselbe Form** `(user_id, id, data jsonb, client_updated_at, updated_at, deleted_at)`, Schlüssel `(user_id, id)` – Abweichung vom Plan (dort Spalten pro Tabelle), damit der Sync (E7) generisch bleibt. `id` = UUID bzw. Übungs-ID (`exercise_prefs`) bzw. `'ich'` (`profiles`).
+  - RLS: lesen/anlegen/ändern nur eigene Zeilen (`user_id = auth.uid()`), kein Zugriff für `anon`, **kein hartes Löschen** für Clients, keine Admin-Ausnahme.
+  - Trigger `stemm_vor_schreiben`: setzt `updated_at` (Server-Uhr, Pull-Cursor), verwirft ältere Änderungen (Last-Write-Wins über `client_updated_at`), verbietet Ändern von `user_id`/`id`.
+  - Größenlimits für `data` (4 KB Körpergewicht … 256 KB Training), Konto-Löschung kaskadiert auf alle Tabellen.
+  - `supabase/config.toml` (lokaler Stack, Vorbild fürs echte Projekt): Registrierung aus, Passwort ≥ 10 Zeichen, Einladungs-/Reset-Links 24 h gültig.
+- **Tests:** `supabase/tests/rls.test.ts` gegen **PGlite** (lokal, ohne Docker; inkl. Gegenprobe, dass ohne RLS Daten sichtbar wären) und `api.integration.test.ts` gegen **echtes Supabase** über die REST-API (CI-Job „Datenbank und Zugriffsregeln“ mit `supabase start`; lokal übersprungen, in der CI erzwungen per `STEMM_INTEGRATION=1`). Deploy hängt von beiden CI-Jobs ab.
+- **Supabase-Schlüssel:** neue Projekte nutzen Publishable Key (`sb_publishable_…`, öffentlich, in der App) und Secret Key (`sb_secret_…`, nur serverseitig). Die alten `anon`/`service_role`-Schlüssel werden Ende 2026 abgekündigt → wir nutzen die neuen.
 
 ## Offene Punkte / Merker
 - Beim Mergen von Dependabot-PRs auf Konflikte achten: Nach dem Merge von #1/#2 war der `features`-Block in `.devcontainer/devcontainer.json` leer (repariert in c90d63a).

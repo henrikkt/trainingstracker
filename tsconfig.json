@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
@@ -15,7 +19,17 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "types": ["node", "vite/client", "vite-plugin-pwa/react"]
+    "types": [
+      "node",
+      "vite/client",
+      "vite-plugin-pwa/react"
+    ]
   },
-  "include": ["src", "e2e", "vite.config.ts", "playwright.config.ts"]
+  "include": [
+    "src",
+    "e2e",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "supabase/tests"
+  ]
 }

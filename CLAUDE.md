@@ -12,7 +12,7 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - **Frontend:** Vite + React + TypeScript, Tailwind v4 (Tokens in `src/index.css`), React Router (HashRouter), PWA via vite-plugin-pwa.
 - **Lokale Daten = Quelle der Wahrheit für die UI:** Dexie (IndexedDB) + `useLiveQuery`. Jede Eingabe im laufenden Training wird sofort lokal gespeichert.
 - **Sync:** Outbox (Push geänderter Datensätze) + Pull per `updated_at > Cursor` (mit Überlappungsfenster). Konflikte: Last-Write-Wins pro Datensatz über `client_updated_at`. Löschen nur weich (`deleted_at`).
-- **Datenmodell:** ein Training = ein Datensatz (Übungen/Sätze als JSONB). Tabellen: `profiles`, `custom_exercises`, `exercise_prefs`, `templates`, `workouts`, `body_weights`. Standard-Übungskatalog liegt im Code (feste IDs).
+- **Datenmodell:** ein Training = ein Datensatz (Übungen/Sätze als JSONB). Tabellen: `profiles`, `custom_exercises`, `exercise_prefs`, `templates`, `workouts`, `body_weights` – **alle in derselben Form** `(user_id, id, data jsonb, client_updated_at, updated_at, deleted_at)`, Schlüssel `(user_id, id)`. Standard-Übungskatalog liegt im Code (feste IDs).
 - **Supabase:** Auth (E-Mail + Passwort, öffentliche Registrierung aus), RLS `user_id = auth.uid()` auf jeder Tabelle, **keine** Admin-Ausnahme. Edge Functions `admin-users` (Einladungs-/Reset-Links per `generateLink`, ohne Mailversand; sperren/löschen) und `delete-account`.
 - **Backups:** privates Repo `trainingstracker-backups`, nächtlicher `pg_dump` über den Session-Pooler (IPv4), `age`-verschlüsselt, Commit. Privater age-Schlüssel nur im Passwortmanager des Admins.
 - **Progressive Overload:** reine Funktionen mit Tests (Regeln siehe `docs/fortschritt.md` bzw. später `src/domain/`).
@@ -67,6 +67,11 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
   - `fortschritt.ts` (Kalender, Tagesschlüssel, Übungsübersicht, Körpergewicht-Verlauf), `export.ts` (CSV)
   - `training.ts` (Erfassen: `planeUebung`, Sätze vorbelegen/ändern/abhaken, `naechsterOffenerSatz`, `abschliessen`, `zusammenfassen`)
   - `testhilfen.ts` – `s(kg, wdh)` und `training(datum, {uebungId: saetze})` für Tests
+
+## Supabase
+- `supabase/migrations/` – SQL-Migrationen (nie bestehende ändern, immer neue Datei mit Zeitstempel). `supabase/config.toml` – lokaler Stack (Auth-Einstellungen wie in Produktion).
+- `supabase/tests/` – `rls.test.ts` (PGlite, lokal), `api.integration.test.ts` (echtes Supabase; läuft nur mit `SUPABASE_URL`/`…_PUBLISHABLE_KEY`/`…_SECRET_KEY`, in CI via `scripts/supabase-env.mjs`).
+- In Codespaces: `npx supabase start` → `node scripts/supabase-env.mjs > .env.supabase` → Werte exportieren → `npm test -- supabase/tests`.
 
 ## Umgebungen
 - **Lokal (Windows):** kein Docker → Unit-Tests, RLS-Tests gegen PGlite (ab E6), E2E gegen Pages-Build.

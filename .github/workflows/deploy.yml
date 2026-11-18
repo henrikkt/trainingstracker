@@ -64,10 +64,44 @@ jobs:
         with:
           path: dist
 
+  supabase:
+    name: Datenbank und Zugriffsregeln (echtes Supabase)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      # Nur die Dienste, die die Tests brauchen (Postgres, Auth, REST, Gateway)
+      - name: Supabase lokal starten (Migrationen werden eingespielt)
+        run: npx supabase start -x studio,imgproxy,storage-api,realtime,logflare,vector,edge-runtime,postgres-meta,supavisor,mailpit
+
+      - name: Zugangsdaten des Test-Stacks setzen
+        run: node scripts/supabase-env.mjs
+
+      - name: RLS- und API-Tests
+        run: npm test -- supabase/tests
+        env:
+          STEMM_INTEGRATION: '1'
+
+      - name: Supabase stoppen
+        if: always()
+        run: npx supabase stop --no-backup
+
   deploy:
     name: Veröffentlichen
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: pruefen
+    needs: [pruefen, supabase]
     runs-on: ubuntu-latest
     permissions:
       pages: write
