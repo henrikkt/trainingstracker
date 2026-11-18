@@ -109,6 +109,8 @@ export function starteSync(): void {
     else setze({ zustand: 'aus', letzterSync: null, meldung: null });
   });
   beiLokalerAenderung(() => {
+    // Sofort als „ausstehend“ anzeigen – nicht erst, wenn der verzögerte Sync startet
+    if (status.ausstehend === 0) setze({ ausstehend: 1 });
     void aktualisiereAusstehend();
     planeSync(NACH_AENDERUNG_MS);
   });

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { expect, test, type Page } from '@playwright/test';
+import { gespeichert } from './hilfen.ts';
 
 /**
  * Synchronisierung gegen den lokalen Supabase-Stack (CI-Job „Datenbank und Zugriffsregeln“):
@@ -80,16 +81,21 @@ test('Löschen auf einem Gerät kommt auf dem anderen an', async ({ page, browse
   await anmelden(page, ich.email);
   await nav(page, 'Pläne');
   await page.getByRole('button', { name: 'Beispiel Pull übernehmen' }).click();
+  await gespeichert(page);
   await expect(syncStatus(page)).toHaveAttribute('aria-label', 'Sync-Status: Synchronisiert', { timeout: 15_000 });
+  const vorlageAufServer = () => admin().from('templates').select('deleted_at').eq('user_id', ich.id);
+  await expect.poll(async () => (await vorlageAufServer()).data?.length).toBe(1);
 
   const geraet2 = await browser.newContext();
   const seite2 = await geraet2.newPage();
   seite2.on('dialog', (d) => void d.accept());
   await anmelden(seite2, ich.email);
   await nav(seite2, 'Pläne');
-  await seite2.getByRole('link', { name: /Pull/ }).click();
+  await seite2.getByRole('link', { name: /^Pull/ }).click(); // erscheint, sobald der Pull nach der Anmeldung durch ist
   await seite2.getByRole('button', { name: 'Vorlage löschen' }).click();
+  await gespeichert(seite2);
   await expect(syncStatus(seite2)).toHaveAttribute('aria-label', 'Sync-Status: Synchronisiert', { timeout: 15_000 });
+  await expect.poll(async () => (await vorlageAufServer()).data?.[0]?.deleted_at ?? null).not.toBeNull();
   await geraet2.close();
 
   // Gerät 1 holt die Löschung (z. B. beim nächsten Sync – hier per „Jetzt synchronisieren“)
@@ -106,6 +112,7 @@ test('Kontowechsel nach vollständigem Sync: fremde Daten verschwinden vom Gerä
   await anmelden(page, anna.email);
   await nav(page, 'Pläne');
   await page.getByRole('button', { name: 'Beispiel Beine übernehmen' }).click();
+  await gespeichert(page);
   await expect(syncStatus(page)).toHaveAttribute('aria-label', 'Sync-Status: Synchronisiert', { timeout: 15_000 });
   await nav(page, 'Profil');
   await page.getByRole('button', { name: 'Abmelden' }).click();
