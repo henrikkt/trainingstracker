@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@import '@fontsource/barlow-condensed/latin-700.css';
+@import '@fontsource/barlow-condensed/latin-800.css';
 
 /*
  * Design-Tokens (Dunkelmodus ist Standard).
@@ -17,18 +19,51 @@
   --color-fehler: #ff6b6b;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Überschriften und große Zahlen: kräftig, schmal, sportlich */
+  --font-display: 'Barlow Condensed', var(--font-sans);
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
+@layer base {
+  html {
+    color-scheme: dark;
+    /* Kein Gummiband-Scrollen der ganzen Seite in der installierten App */
+    overscroll-behavior-y: none;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-grund);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-akzent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
 }
 
-body {
-  background-color: var(--color-grund);
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  -webkit-tap-highlight-color: transparent;
-  -webkit-font-smoothing: antialiased;
+@utility pt-sicher {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@utility pb-sicher {
+  padding-bottom: env(safe-area-inset-bottom);
 }

@@ -36,9 +36,17 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 | `npm run typecheck` / `npm test` | einzeln |
 | `npm run build:pages` | Produktions-Build für GitHub Pages (base `/trainingstracker/`) |
 | `npm run test:e2e` | Playwright gegen den Pages-Build (vorher `npm run build:pages`); lokal mit Edge, in CI/Codespaces mit `PW_CHANNEL=` + Chromium |
+| `SCREENSHOTS=1 npx playwright test screenshots` | Screenshots Handy + Desktop nach `e2e/screenshots/` (Seiten per `SCREENSHOTS_SEITEN=training,plaene`) |
+| `npx pwa-assets-generator` | App-Icons aus `public/favicon.svg` neu erzeugen |
 | `npm run preview:pages` | Pages-Build lokal ansehen (http://localhost:4174/trainingstracker/) |
 
 Ports 5174/4174 (nicht 5173/4173), damit es nicht mit dem Urlaubsplaner kollidiert.
+Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs` umgeht den Windows-Laufwerksbuchstaben-Fehler.
+
+## Code-Struktur
+- `src/components/` – App-Rahmen, Navigation, UI-Bausteine (`ui.tsx`: `Knopf`, `Karte`, `SeitenKopf`, `LeererZustand`)
+- `src/seiten/` – eine Datei pro Route (`/training`, `/plaene`, `/fortschritt`, `/profil`)
+- `src/hooks/` – React-Hooks; `src/lib/` – kleine reine Hilfsfunktionen; ab E2 `src/domain/` – Fachlogik
 
 ## Umgebungen
 - **Lokal (Windows):** kein Docker → Unit-Tests, RLS-Tests gegen PGlite (ab E6), E2E gegen Pages-Build.
