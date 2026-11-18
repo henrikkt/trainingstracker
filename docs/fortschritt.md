@@ -90,6 +90,8 @@ Stand: 2026-11-18 (nach E5)
 - **Frontend (E6c):** Profil → „Zugänge verwalten“ (nur Admin): einladen → Link zum Kopieren/Teilen (24 h, einmalig), Reset-Link, sperren/entsperren, löschen (Bestätigung durch Eintippen der E-Mail). „Konto löschen“ für alle (Bestätigung „LÖSCHEN“), danach lokale Daten weg und abgemeldet.
 - **CI:** `supabase start` jetzt inkl. Edge Runtime; `functions.integration.test.ts` (401/403, Admin-Aktionen, Selbstschutz, delete-account) und E2E `admin.spec.ts`. Neuer Job **„Supabase ausrollen“** (`db push` + `functions deploy --use-api`) nach grünen Tests – läuft erst, wenn `vars.SUPABASE_PROJECT_REF` gesetzt ist.
 
+- **Supabase-Projekt (E6d):** Projekt-Ref `odyujozkghkstnileikb` (Frankfurt). Repository-Variablen `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_REF`; Secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (vom Admin selbst gesetzt). Öffentliche Registrierung vor dem ersten Deploy im Dashboard abgeschaltet. Auth-Einstellungen aus `config.toml` per manuellem Workflow „Supabase-Konfiguration übertragen“ (erst Vergleich, dann mit „anwenden“).
+
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).
 
@@ -115,6 +117,7 @@ Prüfen: `gh api repos/henrikkt/trainingstracker/rulesets`, `…/code-scanning/d
 - **Supabase-Schlüssel:** neue Projekte nutzen Publishable Key (`sb_publishable_…`, öffentlich, in der App) und Secret Key (`sb_secret_…`, nur serverseitig). Die alten `anon`/`service_role`-Schlüssel werden Ende 2026 abgekündigt → wir nutzen die neuen.
 
 ## Offene Punkte / Merker
+- **Supabase-Zugriffstoken (GitHub-Secret `SUPABASE_ACCESS_TOKEN`) läuft am 16.02.2027 ab** (90 Tage ab 18.11.2026). Erkennbar am roten CI-Job „Supabase ausrollen“; die App läuft weiter. Erneuern: neuen Token auf supabase.com/dashboard/account/tokens erzeugen, dann `gh secret set SUPABASE_ACCESS_TOKEN --repo henrikkt/trainingstracker`.
 - Beim Mergen von Dependabot-PRs auf Konflikte achten: Nach dem Merge von #1/#2 war der `features`-Block in `.devcontainer/devcontainer.json` leer (repariert in c90d63a).
 - Hauptpaket ist auf ~142 kB gzip gewachsen (Dexie, Router, Icons). Bei Bedarf in E9 prüfen (z. B. Seiten per lazy laden).
 - iPhone: Ton am Pausenende nur, solange die App im Vordergrund ist; Vibration gibt es dort nicht (Browser-Grenze).
