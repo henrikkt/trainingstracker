@@ -1,0 +1,35 @@
+// Cloud-Entwicklung in GitHub Codespaces (oder lokal mit VS Code + Docker).
+// Enthält Node 26, Docker (für "npx supabase start" ab E6) und Chromium für Playwright.
+// Gratis-Kontingent (GitHub Free): 120 Core-Stunden = 60 h auf diesem 2-Kern-Rechner + 15 GB-Monat Speicher.
+// Tipp: Codespace nach der Arbeit stoppen, nicht benötigte Codespaces löschen (Speicher zählt auch im Ruhezustand).
+{
+  "name": "Stemm (Trainingstracker)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "26" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb"
+  },
+  "postCreateCommand": "npm ci && npx playwright install --with-deps chromium",
+  "containerEnv": {
+    "PW_CHANNEL": ""
+  },
+  "forwardPorts": [5174, 4174, 54321, 54323],
+  "portsAttributes": {
+    "5174": { "label": "Vite (Entwicklung)" },
+    "4174": { "label": "Vite (Vorschau Pages-Build)" },
+    "54321": { "label": "Supabase API (lokal)" },
+    "54323": { "label": "Supabase Studio (lokal)" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["bradlc.vscode-tailwindcss", "ms-playwright.playwright", "vitest.explorer"]
+    },
+    "codespaces": {
+      "openFiles": ["docs/fortschritt.md"]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+# Abhängigkeiten und Build
+node_modules/
+dist/
+dev-dist/
+coverage/
+
+# Secrets und lokale Einstellungen – niemals committen
+.env
+.env.*
+!.env.example
+*.local.*
+*.age
+*.key
+age-key*.txt
+
+# Supabase (lokaler Stack, ab E6)
+supabase/.branches/
+supabase/.temp/
+
+# Caches und Testberichte
+.vite/
+.vitest/
+*.tsbuildinfo
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+e2e/screenshots/
+
+# Sonstiges
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
