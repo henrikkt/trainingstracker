@@ -12,15 +12,15 @@ Stand: 2026-11-18 (nach E5)
 | E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
 | E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
-| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | 🔄 E6a ✅ Schema/RLS · E6b ✅ Login/Einladung · E6c–d offen |
+| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | 🔄 E6a ✅ Schema/RLS · E6b ✅ Login/Einladung · E6c ✅ Functions/Admin · E6d (Live-Schaltung) offen |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
 | E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
 1. **Admin (du):** Supabase-Projekt „stemm“ in Frankfurt anlegen (Anleitung im Chat), Project URL + Publishable Key schicken. DB-Passwort nur in den Passwortmanager.
-2. **Claude:** E6c – Edge Functions `admin-users` (Einladungs-/Reset-Link per `generateLink`, Liste, sperren/entsperren, löschen; nur für `app_metadata.role = 'admin'`) und `delete-account`; Admin-Seite im Profil; „Konto löschen“; Deploy-Workflow für Migrationen + Functions.
-3. **Gemeinsam:** E6d – Live-Schaltung: Secrets per `gh secret set`, Repo-Variablen, Auth-Einstellungen übertragen, ersten Admin anlegen, Freund einladen.
+2. **Gemeinsam:** E6d – Live-Schaltung: Secrets `SUPABASE_ACCESS_TOKEN`/`SUPABASE_DB_PASSWORD` per `gh secret set` (du), Variablen `SUPABASE_PROJECT_REF`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (Claude), Auth-Einstellungen aus `config.toml` übertragen (mit Diff), ersten Admin anlegen, Freund einladen.
+3. **Claude:** danach E7 – Sync-Engine.
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -81,6 +81,14 @@ Stand: 2026-11-18 (nach E5)
   - Abmelden nur lokal (`scope: 'local'`), mit Warnung bei ausstehenden Änderungen; lokale Daten bleiben.
   - Env-Variable heißt jetzt `VITE_SUPABASE_PUBLISHABLE_KEY` (statt `…_ANON_KEY`).
   - E2E `e2e/auth.spec.ts` (Login, Einladung, Einmal-Link, Reset, Kontowechsel blockiert) läuft im CI-Job gegen den lokalen Supabase-Stack; lokal übersprungen.
+
+- **Edge Functions (E6c)** in `supabase/functions/` (Deno):
+  - `admin-users`: Aktionen `liste`, `einladen` (generateLink invite → Token), `reset` (recovery-Token), `sperren`/`entsperren` (ban 100 Jahre / none), `loeschen`. Nur für `app_metadata.role = 'admin'`; liefert nur Verwaltungsdaten (E-Mail, Zeitpunkte, Status), nie Trainingsdaten. Admin kann sich selbst nicht sperren/löschen.
+  - `delete-account`: löscht nur das Konto des Aufrufers (ID aus geprüftem JWT, Body wird ignoriert); Daten per Kaskade weg.
+  - `verify_jwt = false`, JWT-Prüfung im Code (`aufrufer()` via `auth.getUser`) – empfohlen bei den neuen Schlüsseln. CORS nur für GitHub Pages + lokale Ports. Secret Key aus `SUPABASE_SECRET_KEYS` (Fallback `SUPABASE_SERVICE_ROLE_KEY`).
+  - Reine Logik in `_shared/regeln.ts` (Vitest), Typen auch im Frontend genutzt.
+- **Frontend (E6c):** Profil → „Zugänge verwalten“ (nur Admin): einladen → Link zum Kopieren/Teilen (24 h, einmalig), Reset-Link, sperren/entsperren, löschen (Bestätigung durch Eintippen der E-Mail). „Konto löschen“ für alle (Bestätigung „LÖSCHEN“), danach lokale Daten weg und abgemeldet.
+- **CI:** `supabase start` jetzt inkl. Edge Runtime; `functions.integration.test.ts` (401/403, Admin-Aktionen, Selbstschutz, delete-account) und E2E `admin.spec.ts`. Neuer Job **„Supabase ausrollen“** (`db push` + `functions deploy --use-api`) nach grünen Tests – läuft erst, wenn `vars.SUPABASE_PROJECT_REF` gesetzt ist.
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).

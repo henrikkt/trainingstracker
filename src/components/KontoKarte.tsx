@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { CloudOff, LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import { ChevronRight, CloudOff, LogOut, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Link } from 'react-router';
 import { anzahlAusstehend } from '../daten/repo.ts';
 import { abmelden, useSitzung } from '../daten/sitzung.ts';
 import { Karte, Knopf } from './ui.tsx';
@@ -46,6 +47,13 @@ export function KontoKarte() {
           )}
         </div>
       </div>
+      {sitzung.nutzer.admin && (
+        <Link to="/profil/zugaenge" className="flex min-h-12 items-center gap-3 rounded-2xl bg-grund px-4 font-semibold hover:bg-flaeche-hoch">
+          <Users aria-hidden size={20} className="text-akzent" />
+          <span className="flex-1">Zugänge verwalten</span>
+          <ChevronRight aria-hidden size={20} className="text-text-leise" />
+        </Link>
+      )}
       <Knopf variante="sekundaer" icon={LogOut} onClick={() => void abmeldenMitRueckfrage()}>
         Abmelden
       </Knopf>

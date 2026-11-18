@@ -16,6 +16,7 @@ import { TrainingSeite } from './seiten/TrainingSeite.tsx';
 import { UebungenSeite } from './seiten/UebungenSeite.tsx';
 import { UebungSeite } from './seiten/UebungSeite.tsx';
 import { VorlageSeite } from './seiten/VorlageSeite.tsx';
+import { ZugaengeSeite } from './seiten/ZugaengeSeite.tsx';
 
 /**
  * Routen. Mit Backend: ohne Anmeldung nur Login bzw. Einladung/Reset einlösen.
@@ -45,6 +46,7 @@ export function App() {
           <Route path="/fortschritt/uebungen/:id" element={<FortschrittUebungSeite />} />
           <Route path="/fortschritt/koerpergewicht" element={<KoerpergewichtSeite />} />
           <Route path="/profil" element={<ProfilSeite />} />
+          <Route path="/profil/zugaenge" element={<ZugaengeSeite />} />
           <Route path="*" element={<Navigate to="/training" replace />} />
         </Route>
       )}

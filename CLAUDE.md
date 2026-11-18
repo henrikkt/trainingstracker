@@ -54,7 +54,7 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
   - `Diagramm.tsx` (`Verlauf`: lazy geladenes `LinienDiagramm.tsx` mit Recharts), `Vollbild.tsx` (Dialog), `UebungsListe.tsx` (Suche + Filter), `UebungsAuswahl.tsx` (Mehrfachauswahl), `EigeneUebungFormular.tsx`
 - `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema v2 inkl. `meta`, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
   - `supabase.ts` (Client oder `null` = lokaler Modus), `sitzung.ts` (`useSitzung`, anmelden, Link einlösen, Passwort setzen, abmelden), `besitzer.ts` (wem gehören die lokalen Daten)
-- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/einladung` (ohne Login erreichbar), `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`
+- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/einladung` (ohne Login erreichbar), `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`, `/profil/zugaenge` (nur Admin)
 - `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
 - `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`)
 - `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:
@@ -71,7 +71,8 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
 
 ## Supabase
 - `supabase/migrations/` – SQL-Migrationen (nie bestehende ändern, immer neue Datei mit Zeitstempel). `supabase/config.toml` – lokaler Stack (Auth-Einstellungen wie in Produktion).
-- `supabase/tests/` – `rls.test.ts` (PGlite, lokal), `api.integration.test.ts` (echtes Supabase; läuft nur mit `SUPABASE_URL`/`…_PUBLISHABLE_KEY`/`…_SECRET_KEY`, in CI via `scripts/supabase-env.mjs`).
+- `supabase/functions/` – Edge Functions (Deno): `admin-users`, `delete-account`, gemeinsame Teile in `_shared/` (`regeln.ts` = reine, getestete Logik, auch vom Frontend importiert; `http.ts` = Deno-Helfer). Nicht im TS-Typecheck außer `regeln.ts`.
+- `supabase/tests/` – `rls.test.ts` (PGlite, lokal), `api.integration.test.ts`, `functions.integration.test.ts` (echtes Supabase; läuft nur mit `SUPABASE_URL`/`…_PUBLISHABLE_KEY`/`…_SECRET_KEY`, in CI via `scripts/supabase-env.mjs`).
 - In Codespaces: `npx supabase start` → `node scripts/supabase-env.mjs > .env.supabase` → Werte exportieren → `npm test -- supabase/tests`.
 
 ## Umgebungen

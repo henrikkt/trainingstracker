@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Download, FileJson, FileSpreadsheet, HardDrive, Smartphone } from 'lucide-react';
 import { Segment } from '../components/Auswahl.tsx';
 import { KontoKarte } from '../components/KontoKarte.tsx';
+import { KontoLoeschenKarte } from '../components/KontoLoeschenKarte.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { Karte, Knopf, SeitenKopf } from '../components/ui.tsx';
 import { useProfil, useUebungsNachschlag } from '../daten/hooks.ts';
@@ -100,6 +101,7 @@ export function ProfilSeite() {
             </Knopf>
           </div>
         </Karte>
+        <KontoLoeschenKarte />
       </div>
     </>
   );
