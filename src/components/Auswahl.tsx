@@ -92,12 +92,19 @@ export function TextFeld({
   onChange,
   platzhalter,
   autoFocus,
+  typ = 'text',
+  autoComplete = 'off',
+  maxLaenge = 80,
 }: {
   label: string;
   wert: string;
   onChange: (wert: string) => void;
   platzhalter?: string;
   autoFocus?: boolean;
+  typ?: 'text' | 'email' | 'password';
+  /** z. B. "email", "current-password", "new-password" – hilft Passwortmanagern */
+  autoComplete?: string;
+  maxLaenge?: number;
 }) {
   const id = useId();
   return (
@@ -107,12 +114,15 @@ export function TextFeld({
       </label>
       <input
         id={id}
+        type={typ}
         value={wert}
         onChange={(e) => onChange(e.target.value)}
         placeholder={platzhalter}
         autoFocus={autoFocus}
-        maxLength={80}
-        autoComplete="off"
+        maxLength={maxLaenge}
+        autoComplete={autoComplete}
+        autoCapitalize={typ === 'text' ? undefined : 'none'}
+        spellCheck={typ === 'text' ? undefined : false}
         className="min-h-12 rounded-2xl border border-linie bg-grund px-4 text-base text-text outline-none placeholder:text-text-leise focus:border-akzent"
       />
     </div>

@@ -19,6 +19,10 @@ if (fehlend.length) {
   process.exit(1);
 }
 
+// Für den App-Build gegen den lokalen Stack (E2E-Login-Tests)
+werte.VITE_SUPABASE_URL = werte.SUPABASE_URL;
+werte.VITE_SUPABASE_PUBLISHABLE_KEY = werte.SUPABASE_PUBLISHABLE_KEY;
+
 const zeilen = Object.entries(werte).map(([n, w]) => `${n}=${w}`).join('\n') + '\n';
 if (process.env.GITHUB_ENV) appendFileSync(process.env.GITHUB_ENV, zeilen);
 else process.stdout.write(zeilen);

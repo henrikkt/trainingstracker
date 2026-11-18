@@ -4,7 +4,7 @@ import { findeUebung } from '../domain/katalog.ts';
 import { neueTrainingsUebung, planeUebung } from '../domain/training.ts';
 import { EXPORT_FORMAT_VERSION } from '../domain/export.ts';
 import type { KoerpergewichtEintrag, ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
-import { db, PROFIL_ID, type MitMeta, type SyncMeta } from './db.ts';
+import { db, PROFIL_ID, SYNC_TABELLEN, type MitMeta, type SyncMeta } from './db.ts';
 
 /**
  * Alle Schreibzugriffe laufen über diese Funktionen: Sie setzen die Sync-Metadaten
@@ -120,6 +120,23 @@ export async function exportiereAlles() {
     uebungsEinstellungen: await aktiv<UebungsEinstellung>(db.uebungsEinstellungen),
     koerpergewicht: (await aktiv<KoerpergewichtEintrag>(db.koerpergewicht)).sort((a, b) => a.datum.localeCompare(b.datum)),
   };
+}
+
+// Meta (nicht synchronisiert)
+export async function leseMeta<T>(schluessel: string): Promise<T | undefined> {
+  return (await db.meta.get(schluessel))?.wert as T | undefined;
+}
+export const setzeMeta = (schluessel: string, wert: unknown) => verfolge(db.meta.put({ schluessel, wert }).then(() => undefined));
+
+/** Anzahl lokaler Änderungen, die noch nicht zum Server übertragen sind. */
+export async function anzahlAusstehend(): Promise<number> {
+  const anzahlen = await Promise.all(SYNC_TABELLEN.map((t) => db.table(t).where('ausstehend').equals(1).count()));
+  return anzahlen.reduce((a, b) => a + b, 0);
+}
+
+/** Löscht alle lokalen Daten dieses Geräts (z. B. beim Kontowechsel). Server-Daten bleiben unberührt. */
+export async function loescheLokaleDaten(): Promise<void> {
+  await verfolge(db.transaction('rw', db.tables, () => Promise.all(db.tables.map((t) => t.clear()))).then(() => undefined));
 }
 
 // Vorlagen

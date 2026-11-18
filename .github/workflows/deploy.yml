@@ -47,7 +47,7 @@ jobs:
         env:
           # Öffentliche Werte (ab E6 als Repository-Variablen gesetzt, nicht als Secrets nötig)
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Playwright-Browser installieren
         run: npx playwright install --with-deps chromium
@@ -93,6 +93,19 @@ jobs:
         run: npm test -- supabase/tests
         env:
           STEMM_INTEGRATION: '1'
+
+      # App mit VITE_SUPABASE_URL des lokalen Stacks bauen (aus scripts/supabase-env.mjs) → Login-Pflicht aktiv
+      - name: App gegen den lokalen Stack bauen
+        run: npm run build:pages
+
+      - name: Playwright-Browser installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E – Login, Einladung, Passwort-Reset, Kontowechsel
+        run: npx playwright test auth
+        env:
+          CI: 'true'
+          PW_CHANNEL: ''
 
       - name: Supabase stoppen
         if: always()

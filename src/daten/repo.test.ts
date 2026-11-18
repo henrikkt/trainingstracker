@@ -3,6 +3,10 @@ import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
 import { db } from './db.ts';
 import {
   aktualisiereProfil,
+  anzahlAusstehend,
+  leseMeta,
+  loescheLokaleDaten,
+  setzeMeta,
   exportiereAlles,
   speichereKoerpergewicht,
   aktualisiereUebungsEinstellung,
@@ -119,6 +123,22 @@ describe('Körpergewicht und Export', () => {
     expect(daten.vorlagen.map((v) => v.name)).toEqual(['Push']);
     expect(daten.koerpergewicht[0]).toEqual({ id: expect.any(String), datum: '2026-11-18', kg: 82 });
     expect(JSON.stringify(daten)).not.toContain('ausstehend');
+  });
+});
+
+describe('Meta, ausstehende Änderungen, lokale Daten löschen', () => {
+  it('zählt ausstehende Änderungen über alle Sync-Tabellen und löscht alles lokal', async () => {
+    await speichereVorlage({ id: 'v', name: 'A', uebungen: [] });
+    await speichereKoerpergewicht('2026-11-18', 80);
+    await aktualisiereProfil({ pauseSek: 90 });
+    await setzeMeta('besitzer', 'nutzer-1');
+    expect(await anzahlAusstehend()).toBe(3);
+    expect(await leseMeta<string>('besitzer')).toBe('nutzer-1');
+    await db.vorlagen.update('v', { ausstehend: 0 });
+    expect(await anzahlAusstehend()).toBe(2);
+    await loescheLokaleDaten();
+    expect(await anzahlAusstehend()).toBe(0);
+    expect(await leseMeta('besitzer')).toBeUndefined();
   });
 });
 

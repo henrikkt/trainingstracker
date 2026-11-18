@@ -23,7 +23,7 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - Fachlogik als **reine Funktionen** in `src/lib/` bzw. `src/domain/`, jeweils mit `*.test.ts` daneben.
 - Design: Dunkelmodus Standard, Akzent Volt-Limette `#C6F432`, Text auf Akzent-Buttons dunkel (`text-akzent-text`). Neue Farbpaare in `src/lib/kontrast.test.ts` aufnehmen (WCAG AA ≥ 4,5 : 1). Touch-Ziele ≥ 48 px (Haupt-Aktionen 56 px, `min-h-14`).
 - **Strikte CSP** (Meta-Tag, siehe `vite.config.ts`): keine Inline-Skripte/-Styles im HTML, keine externen Quellen/CDNs, Schriften selbst hosten.
-- **Keine Secrets und keine persönlichen Daten** im Code oder Git-Verlauf. Öffentlich sind nur `VITE_SUPABASE_URL` und `VITE_SUPABASE_ANON_KEY` (Repository-Variablen). Alles andere in GitHub Secrets bzw. bei Supabase.
+- **Keine Secrets und keine persönlichen Daten** im Code oder Git-Verlauf. Öffentlich sind nur `VITE_SUPABASE_URL` und `VITE_SUPABASE_PUBLISHABLE_KEY` (Repository-Variablen). Alles andere in GitHub Secrets bzw. bei Supabase.
 - Git: Identität nur lokal im Repo (GitHub-Noreply-Adresse). Nach jeder Etappe ein Commit; vorher müssen `npm run check` (Typecheck + Unit-Tests) grün sein, E2E möglichst auch.
 - Screenshots sparsam: pro Prüfung nur Handy (375 px) und Desktop.
 - Dexie-Schema nie in bestehenden Versionen ändern, sondern `this.version(n+1)` ergänzen.
@@ -52,8 +52,9 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
   - `ui.tsx`: `Knopf`, `Karte`, `SeitenKopf` (mit `zurueck`/`aktion`), `Reiter`, `IconKnopf`, `LeererZustand`
   - `Stepper.tsx` (–/+ mit editierbarem Wert), `Auswahl.tsx` (`Segment`, `Chip`, `AuswahlFeld`, `TextFeld`)
   - `Diagramm.tsx` (`Verlauf`: lazy geladenes `LinienDiagramm.tsx` mit Recharts), `Vollbild.tsx` (Dialog), `UebungsListe.tsx` (Suche + Filter), `UebungsAuswahl.tsx` (Mehrfachauswahl), `EigeneUebungFormular.tsx`
-- `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
-- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`
+- `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema v2 inkl. `meta`, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
+  - `supabase.ts` (Client oder `null` = lokaler Modus), `sitzung.ts` (`useSitzung`, anmelden, Link einlösen, Passwort setzen, abmelden), `besitzer.ts` (wem gehören die lokalen Daten)
+- `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/einladung` (ohne Login erreichbar), `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`
 - `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
 - `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`)
 - `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:

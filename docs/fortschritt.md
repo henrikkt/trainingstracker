@@ -12,18 +12,15 @@ Stand: 2026-11-18 (nach E5)
 | E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
 | E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
-| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | 🔄 E6a ✅ (Schema, RLS, Tests) · E6b–d offen |
+| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | 🔄 E6a ✅ Schema/RLS · E6b ✅ Login/Einladung · E6c–d offen |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
 | E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Admin (du):** Supabase-Konto anlegen (Anleitung kommt zu Beginn von E6 im Chat).
-2. **Claude:** E6 – Supabase:
-   - Supabase-CLI als devDependency, `supabase/` mit Migrationen (Tabellen laut CLAUDE.md, RLS `user_id = auth.uid()`, Trigger für `updated_at`, JSONB-Prüfungen)
-   - RLS-Tests lokal gegen PGlite (nachgebaute `auth.uid()`), in CI zusätzlich gegen `supabase start`
-   - Login (E-Mail + Passwort), Einladungs-/Reset-Link per Edge Function `admin-users` (`generateLink`, kein Mailversand), Admin-Seite, `delete-account`
-   - Deploy-Workflow für Migrationen und Functions; Repository-Variablen `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`
+1. **Admin (du):** Supabase-Projekt „stemm“ in Frankfurt anlegen (Anleitung im Chat), Project URL + Publishable Key schicken. DB-Passwort nur in den Passwortmanager.
+2. **Claude:** E6c – Edge Functions `admin-users` (Einladungs-/Reset-Link per `generateLink`, Liste, sperren/entsperren, löschen; nur für `app_metadata.role = 'admin'`) und `delete-account`; Admin-Seite im Profil; „Konto löschen“; Deploy-Workflow für Migrationen + Functions.
+3. **Gemeinsam:** E6d – Live-Schaltung: Secrets per `gh secret set`, Repo-Variablen, Auth-Einstellungen übertragen, ersten Admin anlegen, Freund einladen.
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -75,6 +72,15 @@ Stand: 2026-11-18 (nach E5)
 - **Export (Profil):** CSV = ein Satz pro Zeile, Semikolon + Dezimalkomma + UTF-8-BOM (für deutsches Excel); JSON = alle aktiven Daten ohne Sync-Metadaten, `formatVersion: 1`. Download per Blob, funktioniert offline.
 - **Link** von den Übungseinstellungen (Pläne) zum Verlauf der Übung.
 - **E2E-Testdaten** werden mit `legeTrainingsAn` (`e2e/hilfen.ts`) direkt in IndexedDB geschrieben. Screenshots mit Beispieldaten: `SCREENSHOTS=1 SCREENSHOTS_DATEN=1 SCREENSHOTS_SEITEN=fortschritt npx playwright test screenshots`.
+
+- **Login (E6b):**
+  - Ohne `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` beim Build läuft die App im **lokalen Modus** (kein Login, alles nur auf dem Gerät) – so funktionieren Entwicklung und die bisherigen E2E-Tests ohne Backend.
+  - Mit Backend: ohne Sitzung nur Login-Seite bzw. `#/einladung?token=…&typ=invite|recovery` (Einladung/Reset einlösen, Passwort ≥ 10 Zeichen festlegen). Token steht im Hash (wird nie an einen Server gesendet), wird nach dem Einlösen aus der Adresszeile entfernt; StrictMode-Doppelaufruf abgefangen.
+  - Sitzung liegt lokal (`stemm.auth`), die App startet damit **auch offline**.
+  - **Besitzer der lokalen Daten** (Dexie v2, Tabelle `meta`): erstes Konto übernimmt vorhandene lokale Daten; anderes Konto → lokale Daten werden gelöscht, **außer** es gibt noch nicht synchronisierte Änderungen – dann wird die Anmeldung abgebrochen (kein Datenverlust, keine Daten beim falschen Konto). Status „angemeldet“ wird bis zum Ende dieser Prüfung zurückgehalten.
+  - Abmelden nur lokal (`scope: 'local'`), mit Warnung bei ausstehenden Änderungen; lokale Daten bleiben.
+  - Env-Variable heißt jetzt `VITE_SUPABASE_PUBLISHABLE_KEY` (statt `…_ANON_KEY`).
+  - E2E `e2e/auth.spec.ts` (Login, Einladung, Einmal-Link, Reset, Kontowechsel blockiert) läuft im CI-Job gegen den lokalen Supabase-Stack; lokal übersprungen.
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).

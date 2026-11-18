@@ -23,6 +23,16 @@ export type KoerpergewichtDS = MitMeta<KoerpergewichtEintrag>;
 export const PROFIL_ID = 'ich';
 export type ProfilDS = MitMeta<ProfilEinstellungen & { id: typeof PROFIL_ID }>;
 
+/** Schlüssel-Wert-Paare für App-Zustand, der nicht synchronisiert wird (Besitzer, Sync-Cursor …). */
+export interface MetaEintrag {
+  schluessel: string;
+  wert: unknown;
+}
+
+/** Tabellen, die mit Supabase synchronisiert werden (alle außer meta). */
+export const SYNC_TABELLEN = ['trainings', 'vorlagen', 'eigeneUebungen', 'uebungsEinstellungen', 'koerpergewicht', 'profil'] as const;
+export type SyncTabelle = (typeof SYNC_TABELLEN)[number];
+
 export class StemmDB extends Dexie {
   trainings!: EntityTable<TrainingDS, 'id'>;
   vorlagen!: EntityTable<VorlageDS, 'id'>;
@@ -30,6 +40,7 @@ export class StemmDB extends Dexie {
   uebungsEinstellungen!: EntityTable<UebungsEinstellungDS, 'uebungId'>;
   koerpergewicht!: EntityTable<KoerpergewichtDS, 'id'>;
   profil!: EntityTable<ProfilDS, 'id'>;
+  meta!: EntityTable<MetaEintrag, 'schluessel'>;
 
   constructor(name = 'stemm') {
     super(name);
@@ -42,6 +53,8 @@ export class StemmDB extends Dexie {
       koerpergewicht: 'id, datum, ausstehend',
       profil: 'id, ausstehend',
     });
+    // Version 2 (E6b): Meta-Tabelle für Besitzer des Geräts und Sync-Stand
+    this.version(2).stores({ meta: 'schluessel' });
   }
 }
 
