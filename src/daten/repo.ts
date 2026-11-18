@@ -2,7 +2,8 @@ import { BEISPIEL_VORLAGEN, vorlageAusBeispiel } from '../domain/beispielVorlage
 import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
 import { findeUebung } from '../domain/katalog.ts';
 import { neueTrainingsUebung, planeUebung } from '../domain/training.ts';
-import type { ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
+import { EXPORT_FORMAT_VERSION } from '../domain/export.ts';
+import type { KoerpergewichtEintrag, ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
 import { db, PROFIL_ID, type MitMeta, type SyncMeta } from './db.ts';
 
 /**
@@ -96,6 +97,29 @@ export async function starteTraining(vorlage?: Vorlage): Promise<string> {
   if (vorlage) training.vorlageId = vorlage.id;
   await speichereTraining(training);
   return training.id;
+}
+
+// Körpergewicht – höchstens ein Eintrag pro Tag (erneutes Eintragen überschreibt)
+export async function speichereKoerpergewicht(datum: string, kg: number, zeit = jetzt()): Promise<void> {
+  const vorhanden = (await db.koerpergewicht.where('datum').equals(datum).toArray()).find(istAktiv);
+  await speichere(db.koerpergewicht, { id: vorhanden?.id ?? neueId(), datum, kg }, zeit);
+}
+export const loescheKoerpergewicht = (id: string, zeit = jetzt()) => loesche(db.koerpergewicht, id, zeit);
+
+/** Vollständiger Export aller eigenen Daten (ohne gelöschte Einträge und ohne Sync-Metadaten). */
+export async function exportiereAlles() {
+  const aktiv = async <T extends object>(tabelle: { toArray(): Promise<(T & SyncMeta)[]> }) => (await tabelle.toArray()).filter(istAktiv).map((x) => ohneMeta<T>(x));
+  return {
+    app: 'stemm',
+    formatVersion: EXPORT_FORMAT_VERSION,
+    exportiertAm: jetzt(),
+    profil: await leseProfil(),
+    trainings: (await aktiv<Training>(db.trainings)).sort((a, b) => a.start.localeCompare(b.start)),
+    vorlagen: await aktiv<Vorlage>(db.vorlagen),
+    eigeneUebungen: await aktiv<Uebung>(db.eigeneUebungen),
+    uebungsEinstellungen: await aktiv<UebungsEinstellung>(db.uebungsEinstellungen),
+    koerpergewicht: (await aktiv<KoerpergewichtEintrag>(db.koerpergewicht)).sort((a, b) => a.datum.localeCompare(b.datum)),
+  };
 }
 
 // Vorlagen

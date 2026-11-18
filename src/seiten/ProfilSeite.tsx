@@ -1,10 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Download, HardDrive, Smartphone } from 'lucide-react';
+import { Download, FileJson, FileSpreadsheet, HardDrive, Smartphone } from 'lucide-react';
 import { Segment } from '../components/Auswahl.tsx';
 import { Stepper } from '../components/Stepper.tsx';
-import { Karte, SeitenKopf } from '../components/ui.tsx';
-import { useProfil } from '../daten/hooks.ts';
-import { aktualisiereProfil } from '../daten/repo.ts';
+import { Karte, Knopf, SeitenKopf } from '../components/ui.tsx';
+import { useProfil, useUebungsNachschlag } from '../daten/hooks.ts';
+import { aktualisiereProfil, alleTrainings, exportiereAlles } from '../daten/repo.ts';
+import { trainingsAlsCsv } from '../domain/export.ts';
+import { tagesSchluessel } from '../domain/fortschritt.ts';
+import { ladeHerunter } from '../lib/download.ts';
 import { istSpeicherDauerhaft } from '../daten/speicher.ts';
 import { formatierePause, GEWICHTS_SCHRITTE, PAUSE_GRENZEN } from '../domain/einstellungen.ts';
 import type { ProfilEinstellungen } from '../domain/typen.ts';
@@ -13,7 +16,11 @@ import { formatiereZahl } from '../lib/format.ts';
 export function ProfilSeite() {
   const profil = useProfil();
   const dauerhaft = useLiveQuery(istSpeicherDauerhaft);
+  const nachschlag = useUebungsNachschlag();
   const setze = (aenderung: Partial<ProfilEinstellungen>) => void aktualisiereProfil(aenderung);
+  const heute = tagesSchluessel(new Date());
+  const exportiereCsv = async () => ladeHerunter(trainingsAlsCsv(await alleTrainings(), nachschlag), `stemm-saetze-${heute}.csv`, 'text/csv;charset=utf-8');
+  const exportiereJson = async () => ladeHerunter(JSON.stringify(await exportiereAlles(), null, 2), `stemm-export-${heute}.json`, 'application/json');
 
   return (
     <>
@@ -72,11 +79,23 @@ export function ProfilSeite() {
           </div>
         </Karte>
 
-        <Karte className="flex items-start gap-4">
-          <Download aria-hidden className="mt-0.5 shrink-0 text-text-leise" />
-          <div>
-            <h2 className="font-display text-xl font-bold">Daten exportieren</h2>
-            <p className="mt-1 text-sm text-text-leise">CSV und JSON – kommt in Kürze.</p>
+        <Karte className="flex flex-col gap-3">
+          <div className="flex items-start gap-4">
+            <Download aria-hidden className="mt-0.5 shrink-0 text-akzent" />
+            <div>
+              <h2 className="font-display text-xl font-bold">Daten exportieren</h2>
+              <p className="mt-1 text-sm text-text-leise">
+                CSV: ein Satz pro Zeile, direkt in Excel/Numbers öffnen. JSON: alle Daten (Trainings, Vorlagen, Einstellungen, Körpergewicht).
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Knopf variante="sekundaer" icon={FileSpreadsheet} onClick={() => void exportiereCsv()}>
+              CSV
+            </Knopf>
+            <Knopf variante="sekundaer" icon={FileJson} onClick={() => void exportiereJson()}>
+              JSON
+            </Knopf>
           </div>
         </Karte>
       </div>

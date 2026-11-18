@@ -3,6 +3,8 @@ import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
 import { db } from './db.ts';
 import {
   aktualisiereProfil,
+  exportiereAlles,
+  speichereKoerpergewicht,
   aktualisiereUebungsEinstellung,
   alleTrainings,
   istAktiv,
@@ -95,6 +97,28 @@ describe('Training starten', () => {
     expect(t!.uebungen[0]!.saetze[0]).toEqual({ gewicht: 105, wdh: 5, erledigt: false });
     await loescheTraining(t!.id);
     expect(await laufendesTraining()).toBeUndefined();
+  });
+});
+
+describe('Körpergewicht und Export', () => {
+  it('ein Eintrag pro Tag – erneutes Eintragen überschreibt', async () => {
+    await speichereKoerpergewicht('2026-11-18', 82);
+    await speichereKoerpergewicht('2026-11-18', 81.5);
+    await speichereKoerpergewicht('2026-11-19', 81.4);
+    const liste = (await db.koerpergewicht.toArray()).filter(istAktiv);
+    expect(liste.map((e) => e.kg).sort()).toEqual([81.4, 81.5]);
+  });
+
+  it('exportiert alle aktiven Daten ohne Metadaten', async () => {
+    await uebernimmBeispielVorlage('push');
+    const weg = await neueVorlage('Weg');
+    await loescheVorlage(weg);
+    await speichereKoerpergewicht('2026-11-18', 82);
+    const daten = await exportiereAlles();
+    expect(daten).toMatchObject({ app: 'stemm', formatVersion: 1, profil: STANDARD_PROFIL });
+    expect(daten.vorlagen.map((v) => v.name)).toEqual(['Push']);
+    expect(daten.koerpergewicht[0]).toEqual({ id: expect.any(String), datum: '2026-11-18', kg: 82 });
+    expect(JSON.stringify(daten)).not.toContain('ausstehend');
   });
 });
 

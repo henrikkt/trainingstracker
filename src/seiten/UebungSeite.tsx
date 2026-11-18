@@ -1,5 +1,5 @@
-import { RotateCcw, Trash2 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router';
+import { RotateCcw, Trash2, TrendingUp } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router';
 import { Segment } from '../components/Auswahl.tsx';
 import { EigeneUebungFormular } from '../components/EigeneUebungFormular.tsx';
 import { Stepper } from '../components/Stepper.tsx';
@@ -47,6 +47,9 @@ export function UebungSeite() {
   return (
     <>
       <SeitenKopf titel={uebung.name} zurueck="/plaene/uebungen" unterzeile={unterzeile} />
+      <Link to={`/fortschritt/uebungen/${uebung.id}`} className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-semibold text-akzent hover:underline">
+        <TrendingUp aria-hidden size={18} /> Verlauf und Rekorde ansehen
+      </Link>
       <div className="flex flex-col gap-4 pb-6">
         <Karte className="flex flex-col gap-4">
           <div>

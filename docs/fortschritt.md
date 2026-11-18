@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-18 (nach E4)
+Stand: 2026-11-18 (nach E5)
 
 ## Etappen Phase 1 (MVP)
 
@@ -11,20 +11,19 @@ Stand: 2026-11-18 (nach E4)
 | E2 | Domänenlogik: Übungskatalog (~70), Progression, e1RM, PRs, Volumen (reine Funktionen + Tests) | ✅ erledigt |
 | E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
 | E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
-| E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ⏭️ als Nächstes |
-| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | offen |
+| E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
+| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | ⏭️ als Nächstes |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
 | E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Claude:** E5 – Fortschritt & Export:
-   - Verlauf pro Übung als Diagramm (e1RM, Top-Satz, Volumen) – `verlaufFuerUebung`, Recharts lazy geladen
-   - Persönliche Rekorde mit Datum (`rekordeFuerUebung`)
-   - Trainingskalender (Monatsansicht mit markierten Tagen) und Wochen-Volumen pro Muskelgruppe (`wochenVolumenProMuskelgruppe`)
-   - Körpergewicht-Verlauf (Tabelle `koerpergewicht` existiert schon)
-   - Export CSV (ein Satz pro Zeile) und JSON (alles) im Profil
-   - Übungsnamen über `useUebungsNachschlag` (inkl. gelöschter eigener Übungen)
+1. **Admin (du):** Supabase-Konto anlegen (Anleitung kommt zu Beginn von E6 im Chat).
+2. **Claude:** E6 – Supabase:
+   - Supabase-CLI als devDependency, `supabase/` mit Migrationen (Tabellen laut CLAUDE.md, RLS `user_id = auth.uid()`, Trigger für `updated_at`, JSONB-Prüfungen)
+   - RLS-Tests lokal gegen PGlite (nachgebaute `auth.uid()`), in CI zusätzlich gegen `supabase start`
+   - Login (E-Mail + Passwort), Einladungs-/Reset-Link per Edge Function `admin-users` (`generateLink`, kein Mailversand), Admin-Seite, `delete-account`
+   - Deploy-Workflow für Migrationen und Functions; Repository-Variablen `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -68,7 +67,17 @@ Stand: 2026-11-18 (nach E4)
 - **Schreibzähler `data-schreibt`** am `<html>`-Element (Anzahl laufender IndexedDB-Schreibvorgänge). E2E-Tests warten vor jedem `reload()` mit `gespeichert(page)` auf "0" – Chromium bricht sonst noch offene Transaktionen beim Neuladen ab.
 - E2E lokal zusätzlich mit dem mitgelieferten Chromium prüfen (wie CI): `CI=true PW_CHANNEL= npx playwright test` (Bash) – Edge allein hat den Timing-Fehler nicht gezeigt.
 
+- **Fortschritt (E5):** Reiter Übersicht | Übungen | Körper.
+  - Übersicht: Kennzahlen dieser Woche, Monatskalender (Trainingstage in Akzentfarbe, Tipp zeigt die Trainings des Tages), Volumen pro Muskel je ISO-Woche als Balken (Sätze; kg nur beim Hauptmuskel).
+  - Übung: Liniendiagramm umschaltbar 1RM (Epley) / Top-Satz / Volumen, Rekorde mit Datum, alle Einheiten als Liste (dient zugleich als Tabellenansicht des Diagramms).
+  - Körpergewicht: ein Wert pro Tag (erneutes Eintragen überschreibt), Diagramm + Liste mit Veränderung.
+  - Diagramme mit **Recharts, per React.lazy nachgeladen** (eigenes Paket ~116 kB gzip, im Offline-Cache). Gestaltung nach dataviz-Regeln (eine Reihe, keine Legende, 2-px-Linie, Tooltip). Farben als Hex in `LinienDiagramm.tsx` (gespiegelt aus den Tokens).
+- **Export (Profil):** CSV = ein Satz pro Zeile, Semikolon + Dezimalkomma + UTF-8-BOM (für deutsches Excel); JSON = alle aktiven Daten ohne Sync-Metadaten, `formatVersion: 1`. Download per Blob, funktioniert offline.
+- **Link** von den Übungseinstellungen (Pläne) zum Verlauf der Übung.
+- **E2E-Testdaten** werden mit `legeTrainingsAn` (`e2e/hilfen.ts`) direkt in IndexedDB geschrieben. Screenshots mit Beispieldaten: `SCREENSHOTS=1 SCREENSHOTS_DATEN=1 SCREENSHOTS_SEITEN=fortschritt npx playwright test screenshots`.
+
 ## Offene Punkte / Merker
+- Hauptpaket ist auf ~142 kB gzip gewachsen (Dexie, Router, Icons). Bei Bedarf in E9 prüfen (z. B. Seiten per lazy laden).
 - iPhone: Ton am Pausenende nur, solange die App im Vordergrund ist; Vibration gibt es dort nicht (Browser-Grenze).
 - Gelöschte eigene Übungen sind nur weich gelöscht: Verlauf/Statistik (E4/E5) muss sie für alte Trainings weiterhin finden (Lookup inkl. gelöschter Einträge).
 - Vor E6: Supabase-Konto anlegen (Anleitung folgt in E6).

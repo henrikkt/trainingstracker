@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
 import { findeUebung, KATALOG } from '../domain/katalog.ts';
-import type { ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
+import type { KoerpergewichtEintrag, ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
 import { db } from './db.ts';
 import { alleTrainings, istAktiv, leseProfil, ohneMeta } from './repo.ts';
 
@@ -64,6 +64,11 @@ export function useTraining(id: string | undefined): Training | null | undefined
 export function useUebungsNachschlag(): (id: string) => Uebung | undefined {
   const alleEigenen = useLiveQuery(async () => (await db.eigeneUebungen.toArray()).map((u) => ohneMeta<Uebung>(u)));
   return useMemo(() => (id: string) => findeUebung(id, alleEigenen ?? []), [alleEigenen]);
+}
+
+/** Körpergewicht-Einträge (unsortiert). undefined = lädt noch. */
+export function useKoerpergewicht(): KoerpergewichtEintrag[] | undefined {
+  return useLiveQuery(async () => (await db.koerpergewicht.toArray()).filter(istAktiv).map((e) => ohneMeta<KoerpergewichtEintrag>(e)));
 }
 
 export function useProfil(): ProfilEinstellungen {
