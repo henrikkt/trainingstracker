@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { createClient } from '@supabase/supabase-js';
 import { generateIdentity, identityToRecipient } from 'age-encryption';
 import pg from 'pg';
@@ -58,5 +59,6 @@ const danach = createClient(url, publishable, optionen);
 const login = await danach.auth.signInWithPassword({ email, password: passwort });
 pruefe(!login.error, 'Anmeldung mit dem bisherigen Passwort funktioniert wieder');
 const { data: trainings } = await danach.from('workouts').select('id, data');
-pruefe(JSON.stringify(trainings) === JSON.stringify([{ id: 't1', data: training }]), 'Training ist vollständig wiederhergestellt');
+// inhaltlich vergleichen – jsonb speichert Objektschlüssel in eigener Reihenfolge
+pruefe(isDeepStrictEqual(trainings, [{ id: 't1', data: training }]), 'Training ist vollständig wiederhergestellt');
 console.log('Wiederherstellungs-Rundlauf erfolgreich.');
