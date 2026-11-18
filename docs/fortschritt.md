@@ -31,7 +31,7 @@ Stand: 2026-11-18 (nach E5)
 - **GitHub Codespaces** zusätzlich eingerichtet (`.devcontainer/`): Gratis 120 Core-Stunden/Monat = 60 h auf 2 Kernen (8 GB RAM) + 15 GB-Monat Speicher. Reicht für `supabase start` (~2 GB RAM) und Playwright. Lokal (ohne Docker) bleiben Unit-/PGlite-Tests, die CI sichert ab.
 - **Vitest-Startskript `scripts/vitest.mjs`:** Unter Windows startet das VS-Code-Terminal mit kleinem Laufwerksbuchstaben (`c:\`). Vitest lädt dann Module doppelt und alle Tests brechen mit „reading 'config'“ ab. Das Skript normalisiert den Pfad. (In E0 fälschlich für einen Fehler in Vitest 5.1.1 gehalten – Pin wieder entfernt.)
 - **Ports 5174/4174** statt Standard, um nicht mit dem Urlaubsplaner zu kollidieren.
-- **npm audit:** 6 „high“-Funde in `picomatch` (ReDoS, betrifft nur Build-Werkzeuge vite/vitest, kein Fix verfügbar, nicht im App-Bundle). CI bricht nur bei „critical“ ab (wie vereinbart).
+- **npm audit: 0 Funde.** Die frühere Dependabot-Meldung zu `minimatch` (mittel, transitiv über `vite-plugin-pwa` → `workbox-build` → `glob` 11) ist per `overrides` behoben: `workbox-build` bekommt `glob` ^14.0.6 (bringt `minimatch` 11.0.9 mit; `workbox-build` nutzt nur `globSync`, das es dort weiterhin gibt). Der von npm vorgeschlagene Downgrade von `vite-plugin-pwa` auf 1.1.0 wurde bewusst nicht gemacht. Bei einem Update von `vite-plugin-pwa`/`workbox-build` prüfen, ob die Override noch nötig ist. CI bricht weiterhin bei „critical“ ab.
 - **CI-Workflow** läuft auch für Pull Requests (z. B. Dependabot) – dort ohne Deploy. Base-Pfad fest `/trainingstracker/` (kein `configure-pages` nötig).
 - **CSP** als Meta-Tag; `connect-src` wird beim Build automatisch um die Supabase-URL (https + wss) ergänzt.
 
@@ -75,6 +75,15 @@ Stand: 2026-11-18 (nach E5)
 - **Export (Profil):** CSV = ein Satz pro Zeile, Semikolon + Dezimalkomma + UTF-8-BOM (für deutsches Excel); JSON = alle aktiven Daten ohne Sync-Metadaten, `formatVersion: 1`. Download per Blob, funktioniert offline.
 - **Link** von den Übungseinstellungen (Pläne) zum Verlauf der Übung.
 - **E2E-Testdaten** werden mit `legeTrainingsAn` (`e2e/hilfen.ts`) direkt in IndexedDB geschrieben. Screenshots mit Beispieldaten: `SCREENSHOTS=1 SCREENSHOTS_DATEN=1 SCREENSHOTS_SEITEN=fortschritt npx playwright test screenshots`.
+
+## GitHub-Sicherheitseinstellungen
+| Einstellung | Stand |
+|---|---|
+| Ruleset „main schützen“ (nur Force-Push und Löschen blockiert, keine PR-/Check-Pflicht) | ⏳ wartet auf `gh` |
+| Dependabot security updates an, gruppierte Security-Updates aus | ⏳ wartet auf `gh` |
+| Code scanning: CodeQL Default setup (JavaScript/TypeScript) | ⏳ wartet auf `gh` |
+| Dependabot-Meldung `minimatch` behoben (`overrides`) | ✅ |
+| Dependabot version updates (`.github/dependabot.yml`: npm, Actions, Devcontainer) | ✅ seit E0 |
 
 ## Offene Punkte / Merker
 - Hauptpaket ist auf ~142 kB gzip gewachsen (Dexie, Router, Icons). Bei Bedarf in E9 prüfen (z. B. Seiten per lazy laden).
