@@ -46,7 +46,15 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
 ## Code-Struktur
 - `src/components/` – App-Rahmen, Navigation, UI-Bausteine (`ui.tsx`: `Knopf`, `Karte`, `SeitenKopf`, `LeererZustand`)
 - `src/seiten/` – eine Datei pro Route (`/training`, `/plaene`, `/fortschritt`, `/profil`)
-- `src/hooks/` – React-Hooks; `src/lib/` – kleine reine Hilfsfunktionen; ab E2 `src/domain/` – Fachlogik
+- `src/hooks/` – React-Hooks; `src/lib/` – kleine reine Hilfsfunktionen (Formatierung, Kontrast)
+- `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:
+  - `typen.ts` (Übung, Satz, Training, Muskelgruppen, Geräte)
+  - `katalog.ts` (70 Übungen, Suche) – **IDs nie ändern**
+  - `steigerung.ts` (Standard-Steigerung je Übungstyp)
+  - `progression.ts` (Vorschlag fürs nächste Mal; Regeln im Dateikopf)
+  - `kennzahlen.ts` (e1RM Epley, Volumen, Verlauf, ISO-Woche, Wochen-Volumen pro Muskelgruppe)
+  - `rekorde.ts` (PRs, neue Rekorde eines Trainings), `letztesMal.ts` („3 × 8 × 80 kg“)
+  - `testhilfen.ts` – `s(kg, wdh)` und `training(datum, {uebungId: saetze})` für Tests
 
 ## Umgebungen
 - **Lokal (Windows):** kein Docker → Unit-Tests, RLS-Tests gegen PGlite (ab E6), E2E gegen Pages-Build.
