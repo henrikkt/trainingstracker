@@ -12,15 +12,13 @@ Stand: 2026-11-18 (nach E5)
 | E3 | Lokale Daten (Dexie), Übungen/eigene Übungen, Vorlagen, Übungseinstellungen | ✅ erledigt |
 | E4 | Training erfassen: Live-Training, +/-, Abhaken, Pausentimer, Wake Lock, „Letztes Mal“, Vorschläge, Zusammenfassung | ✅ erledigt |
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
-| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | 🔄 E6a ✅ Schema/RLS · E6b ✅ Login/Einladung · E6c ✅ Functions/Admin · E6d (Live-Schaltung) offen |
-| E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | offen |
+| E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | ✅ erledigt (E6a Schema/RLS · E6b Login/Einladung · E6c Functions/Admin · E6d live) |
+| E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | ⏭️ als Nächstes |
 | E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | offen |
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
 
 ## Nächste Schritte
-1. **Admin (du):** Supabase-Projekt „stemm“ in Frankfurt anlegen (Anleitung im Chat), Project URL + Publishable Key schicken. DB-Passwort nur in den Passwortmanager.
-2. **Gemeinsam:** E6d – Live-Schaltung: Secrets `SUPABASE_ACCESS_TOKEN`/`SUPABASE_DB_PASSWORD` per `gh secret set` (du), Variablen `SUPABASE_PROJECT_REF`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (Claude), Auth-Einstellungen aus `config.toml` übertragen (mit Diff), ersten Admin anlegen, Freund einladen.
-3. **Claude:** danach E7 – Sync-Engine.
+1. **Claude:** E7 – Sync-Engine (Push ausstehender Datensätze, Pull per `updated_at`-Cursor mit Überlappung, Last-Write-Wins), Auslöser (Start, online, nach Änderungen, periodisch), sichtbarer Sync-Status, E2E „offline erfassen → online → synchronisiert“ und „zweites Gerät sieht die Daten“.
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -91,7 +89,9 @@ Stand: 2026-11-18 (nach E5)
 - **CI-Aufteilung (Fix E6d):** Job „Prüfen und bauen“ baut erst **ohne** Backend für die E2E-Tests im lokalen Modus und danach den Pages-Build **mit** `VITE_SUPABASE_*` (plus Prüfung, dass URL in JS und CSP steckt). Sonst hingen die lokalen E2E-Tests an der Login-Seite.
 - **CI:** `supabase start` jetzt inkl. Edge Runtime; `functions.integration.test.ts` (401/403, Admin-Aktionen, Selbstschutz, delete-account) und E2E `admin.spec.ts`. Neuer Job **„Supabase ausrollen“** (`db push` + `functions deploy --use-api`) nach grünen Tests – läuft erst, wenn `vars.SUPABASE_PROJECT_REF` gesetzt ist.
 
-- **Supabase-Projekt (E6d):** Projekt-Ref `odyujozkghkstnileikb` (Frankfurt). Repository-Variablen `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_REF`; Secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (vom Admin selbst gesetzt). Öffentliche Registrierung vor dem ersten Deploy im Dashboard abgeschaltet. Auth-Einstellungen aus `config.toml` per manuellem Workflow „Supabase-Konfiguration übertragen“ (erst Vergleich, dann mit „anwenden“).
+- **Supabase-Projekt (E6d):** Projekt-Ref `odyujozkghkstnileikb` (Frankfurt). Repository-Variablen `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_REF`; Secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (vom Admin selbst gesetzt). Öffentliche Registrierung vor dem ersten Deploy im Dashboard abgeschaltet. Erster Admin am 18.11.2026 im Dashboard angelegt (Auto Confirm) und per SQL `raw_app_meta_data.role = admin` gesetzt; Einladung eines weiteren Kontos erfolgreich getestet.
+  - Rauchtest Produktion ohne Konto: REST → 401 „permission denied“, Registrierung → 422 „signup_disabled“, `admin-users` → 401, CORS nur für GitHub Pages.
+  - **CLI v3:** `db push` braucht `--remote` (sonst lokaler Stack), `functions deploy` nutzt das verknüpfte Projekt; beide mit `--yes` in der CI. Auth-Einstellungen aus `config.toml` per manuellem Workflow „Supabase-Konfiguration übertragen“ (erst Vergleich, dann mit „anwenden“).
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).
