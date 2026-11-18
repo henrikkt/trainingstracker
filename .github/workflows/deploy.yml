@@ -157,10 +157,10 @@ jobs:
         run: npx supabase link --project-ref "$PROJEKT"
 
       - name: Migrationen einspielen
-        run: npx supabase db push
+        run: npx supabase db push --remote --yes
 
       - name: Edge Functions ausrollen
-        run: npx supabase functions deploy --project-ref "$PROJEKT" --use-api
+        run: npx supabase functions deploy --use-api --yes
 
   deploy:
     name: Veröffentlichen
