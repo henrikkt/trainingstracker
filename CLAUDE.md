@@ -29,6 +29,7 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - Dexie-Schema nie in bestehenden Versionen ändern, sondern `this.version(n+1)` ergänzen.
 - Sync schreibt direkt in Dexie (`src/sync/motor.ts`), die App immer über `repo.ts` – nur so löst eine Nutzer-Änderung `beiLokalerAenderung` und damit den Sync aus.
 - Teil-Änderungen an bestehenden Datensätzen (Profil, Einstellungen) nur über `aktualisiere…`-Funktionen (Transaktion), nie `{...hookWert, ...aenderung}` speichern.
+- E2E: `test`/`expect` immer aus `./fixtures.ts` importieren (Wachposten gegen CSP-/JS-Fehler). Neue Seiten in `e2e/barrierefreiheit.spec.ts` aufnehmen (axe + Touch-Ziele).
 - E2E: vor `page.reload()` immer `await gespeichert(page)` (wartet auf `html[data-schreibt="0"]`). Vor dem Commit auch mit Chromium testen: `CI=true PW_CHANNEL= npx playwright test`.
 - E2E-Selektoren: Stepper-Felder per `getByRole('textbox', { name, exact: true })` (die –/+-Knöpfe enthalten den Feldnamen); Listen mit `aria-label` eindeutig machen.
 - `docs/fortschritt.md` und diese Datei nach jeder Etappe aktualisieren.
@@ -43,6 +44,7 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 | `npm run test:e2e` | Playwright gegen den Pages-Build (vorher `npm run build:pages`); lokal mit Edge, in CI/Codespaces mit `PW_CHANNEL=` + Chromium |
 | `SCREENSHOTS=1 npx playwright test screenshots` | Screenshots Handy + Desktop nach `e2e/screenshots/` (Seiten per `SCREENSHOTS_SEITEN=training,plaene`; `live` = laufendes Training mit Pause; `SCREENSHOTS_DATEN=1` legt Beispieltrainings an) |
 | `npx pwa-assets-generator` | App-Icons aus `public/favicon.svg` neu erzeugen |
+| `LIVE=1 PW_BASE_URL=https://henrikkt.github.io/trainingstracker/ npx playwright test live` | Rauchtest gegen die veröffentlichte App |
 | `npm run preview:pages` | Pages-Build lokal ansehen (http://localhost:4174/trainingstracker/) |
 
 Ports 5174/4174 (nicht 5173/4173), damit es nicht mit dem Urlaubsplaner kollidiert.

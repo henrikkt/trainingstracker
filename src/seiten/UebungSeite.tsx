@@ -79,7 +79,7 @@ export function UebungSeite() {
               Standard: {standard.wdhBereich.min}–{standard.wdhBereich.max}. Gilt für freie Trainings; Vorlagen haben eigene Ziele.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Stepper label="Von" wert={eff.wdhBereich.min} min={1} max={100} onChange={(min) => setze({ wdhBereich: normalisiereWdhBereich({ min, max: Math.max(min, eff.wdhBereich.max) }) })} />
             <Stepper label="Bis" wert={eff.wdhBereich.max} min={1} max={100} onChange={(max) => setze({ wdhBereich: normalisiereWdhBereich({ min: Math.min(eff.wdhBereich.min, max), max }) })} />
           </div>

@@ -1,4 +1,5 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
+import { expect, test } from './fixtures.ts';
 
 /** Wartet, bis alle Schreibvorgänge in IndexedDB abgeschlossen sind (vor Neuladen!). */
 const gespeichert = (page: Page) => expect(page.locator('html')).toHaveAttribute('data-schreibt', '0');

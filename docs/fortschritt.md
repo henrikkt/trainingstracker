@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-19 (E8 größtenteils erledigt)
+Stand: 2026-11-19 (E9 läuft)
 
 ## Etappen Phase 1 (MVP)
 
@@ -14,12 +14,13 @@ Stand: 2026-11-19 (E8 größtenteils erledigt)
 | E5 | Fortschritt & Export: Diagramme, PRs, Kalender, Wochenvolumen, Körpergewicht, CSV/JSON | ✅ erledigt |
 | E6 | Supabase: Projekt (Frankfurt), Migrationen, RLS + Tests, Login/Einladung/Reset, Admin, Konto löschen | ✅ erledigt (E6a Schema/RLS · E6b Login/Einladung · E6c Functions/Admin · E6d live) |
 | E7 | Sync-Engine: Outbox, Push/Pull, Konflikte, Sync-Status, E2E offline → Sync | ✅ erledigt |
-| E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | 🔄 Backup läuft ✅ · gemeinsamer Restore-Test offen |
-| E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | offen |
+| E8 | Backups: privates Repo, age, nächtlicher Job mit Commit, Keep-alive, Restore-Test (gemeinsam), README | 🔄 Backup läuft ✅ · Restore-Test mit echtem Schlüssel **bewusst verschoben (offen)** |
+| E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | 🔄 automatische Prüfungen ✅ · Handy-Tests offen |
 
 ## Nächste Schritte
-1. **Gemeinsam:** Echter Wiederherstellungstest mit dem privaten age-Schlüssel des Admins in ein Test-Projekt „stemm-wiederherstellung“ – Schritt-für-Schritt-Anleitung steht in `backup/README.md` (Abschnitt „Wiederherstellen“); vorher kurz Testdaten in der Live-App erfassen und `gh workflow run backup.yml --repo henrikkt/trainingstracker-backups`. Ergebnis (Zeilenzahlen + Login) hier dokumentieren, Test-Projekt danach löschen.
-2. **Claude:** E9 – Härtung & Abnahme (CSP-Check im Browser, Barrierefreiheit, Lighthouse/PWA, Installation iPhone/Android, Abnahme-Checkliste).
+1. **Admin (du):** Manuelle Handy-Tests M1–M10 aus [docs/abnahme.md](abnahme.md) durchgehen und zurückmelden; Claude trägt die Ergebnisse ein und behebt Funde.
+2. **Offen, bewusst verschoben (19.11.2026):** Wiederherstellungstest mit dem echten privaten age-Schlüssel (Abnahmepunkt A4b bleibt bis dahin **unerfüllt**). Anleitung in `backup/README.md`; Mindestvariante: nur „Nur prüfen“ (entschlüsseln + Zeilenzahlen, schreibt nichts). Claude bietet ihn am Ende der Abnahme erneut an.
+3. Danach: Phase 1 abschließen; Phase-2-Ideen (Teilen mit Freunden, Plate-Rechner, Supersätze, Aufwärmsätze, Passkeys, CSV-Import).
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -108,6 +109,14 @@ Stand: 2026-11-19 (E8 größtenteils erledigt)
   - Wiederherstellung: `scripts/backup-wiederherstellen.ts` (Node, ohne psql/age-Programm): entschlüsseln, prüfen, in **einer** Transaktion einspielen; verweigert die Produktions-DB ohne `--auch-produktion`.
   - **Automatischer Rundlauf in der CI** (`scripts/backup-rundlauf.ts`): Daten anlegen → Dump mit Wegwerf-Schlüssel → `db reset` (Totalverlust) → Wiederherstellung → Login mit altem Passwort + identische Trainingsdaten.
   - Datenbank-Passwort am 18.11.2026 geändert; GitHub-Secret `SUPABASE_DB_PASSWORD` im App-Repo aktualisiert.
+
+- **Härtung (E9):**
+  - **Wachposten** (`e2e/fixtures.ts`) in allen E2E-Tests: CSP-Verstöße (`securitypolicyviolation`), JavaScript-Fehler und unerwartete Konsolenfehler lassen den Test scheitern (Netzwerkfehler erlaubt).
+  - **Barrierefreiheit** (`e2e/barrierefreiheit.spec.ts`, Helfer `e2e/a11y.ts`): axe-core WCAG 2.2 AA auf allen Hauptseiten mit Daten (Handy + Desktop), dazu Login/Passwort festlegen (`auth.spec`) und Zugänge (`admin.spec`) im Supabase-Job; Touch-Ziele auf dem Handy automatisch gemessen (≥ 44 px, Fließtext-Links ausgenommen).
+  - Behobene Funde: Kalendertage hatten einen Namen ohne die sichtbare Zahl (WCAG 2.5.3) → „1. November, Sonntag, …“; Link „Vorlage anlegen“ 20 px hoch; Stepper nebeneinander nur 38 px breit (jetzt untereinander auf schmalen Bildschirmen); Chips 40 px → 44 px; Kalenderzellen 41 px → 44 px.
+  - **Service Worker wurde mit Backend erst nach dem Login registriert** (Registrierung steckte im App-Rahmen) → kein Offline-Start und auf Android keine Installation vor der ersten Anmeldung. Jetzt in `App.tsx` für jeden Zustand; Test in `auth.spec`.
+  - **Live-Rauchtest** `e2e/live.spec.ts` (nur mit `LIVE=1 PW_BASE_URL=https://henrikkt.github.io/trainingstracker/`): CSP, Manifest, Icons, Service Worker, Offline-Start der Login-Seite.
+  - Abnahme-Checkliste: [docs/abnahme.md](abnahme.md).
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).

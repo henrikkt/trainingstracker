@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { pruefeSeite } from './a11y.ts';
+import { expect, test } from './fixtures.ts';
 import { gespeichert } from './hilfen.ts';
 
 /**
@@ -34,9 +36,12 @@ async function kontoMitPasswort(name: string): Promise<string> {
   return email;
 }
 
-test('ohne Anmeldung nur die Login-Seite; falsches Passwort wird gemeldet', async ({ page }) => {
+test('ohne Anmeldung nur die Login-Seite; falsches Passwort wird gemeldet', async ({ page }, info) => {
   await page.goto('./#/fortschritt');
   await expect(page.getByRole('heading', { level: 1, name: 'Anmelden' })).toBeVisible();
+  await pruefeSeite(page, 'Login', info.project.name === 'handy');
+  // Service Worker wird schon vor der Anmeldung registriert (Offline-Start, Installierbarkeit)
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
   await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toHaveCount(0);
   await anmelden(page, await kontoMitPasswort('falsch'), 'falsches-passwort-123');
   await expect(page.getByRole('alert')).toContainText('E-Mail oder Passwort stimmt nicht.');
@@ -49,6 +54,8 @@ test('Einladung annehmen → Passwort festlegen → angemeldet (auch nach Neulad
 
   await expect(page.getByRole('heading', { level: 1, name: 'Willkommen' })).toBeVisible();
   await expect(page).not.toHaveURL(/token=/); // Token wurde aus der Adresszeile entfernt
+  await expect(page.getByLabel('Neues Passwort')).toBeVisible();
+  await pruefeSeite(page, 'Passwort festlegen', test.info().project.name === 'handy');
   await page.getByLabel('Neues Passwort').fill(PASSWORT);
   await page.getByLabel('Passwort wiederholen').fill(PASSWORT);
   await page.getByRole('button', { name: 'Passwort speichern' }).click();

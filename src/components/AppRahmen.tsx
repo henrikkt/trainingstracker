@@ -1,6 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
 import { NAV_ZIELE } from './navigation.ts';
-import { UpdateHinweis } from './UpdateHinweis.tsx';
 import { VerbindungsStatus } from './VerbindungsStatus.tsx';
 
 /**
@@ -57,8 +56,6 @@ export function AppRahmen() {
           <Outlet />
         </main>
       </div>
-
-      <UpdateHinweis />
     </div>
   );
 }

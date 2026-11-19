@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { pruefeSeite } from './a11y.ts';
+import { expect, test } from './fixtures.ts';
 
 /**
  * Zugänge verwalten (Admin) und eigenes Konto löschen – gegen den lokalen Supabase-Stack mit Edge Functions.
@@ -45,6 +47,7 @@ test('Admin lädt einen Freund ein, der Freund nimmt an; Admin sperrt, entsperrt
   expect(link).toMatch(/#\/einladung\?token=.+&typ=invite$/);
   const konten = page.getByRole('list', { name: 'Konten' });
   await expect(konten.getByRole('listitem').filter({ hasText: freund })).toContainText('Einladung offen');
+  await pruefeSeite(page, 'Zugänge verwalten', test.info().project.name === 'handy');
 
   // Freund löst den Link in einem eigenen Browser ein
   const freundKontext = await browser.newContext();

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { expect, test } from './fixtures.ts';
 import { gespeichert } from './hilfen.ts';
 
 /**

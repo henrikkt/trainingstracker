@@ -6,7 +6,7 @@ import { useTrainings, useUebungsNachschlag } from '../daten/hooks.ts';
 import { kalenderWochen, tagesSchluessel, trainingsNachTag, wochenStart } from '../domain/fortschritt.ts';
 import { anzahlErledigterSaetze, isoWoche, trainingsVolumen, wochenVolumenProMuskelgruppe } from '../domain/kennzahlen.ts';
 import { MUSKELGRUPPEN, MUSKELGRUPPEN_NAMEN, type Uebung } from '../domain/typen.ts';
-import { formatiereDatum, formatiereVolumen, formatiereZahl } from '../lib/format.ts';
+import { formatiereVolumen, formatiereZahl } from '../lib/format.ts';
 
 export const FORTSCHRITT_REITER = [
   { pfad: '/fortschritt', text: 'Übersicht', ende: true },
@@ -17,6 +17,7 @@ export const FORTSCHRITT_REITER = [
 const WOCHENTAGE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const monatsName = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
 const tagMonat = (d: Date) => `${d.getDate()}.${d.getMonth() + 1}.`;
+const tagName = { format: (d: Date) => `${d.getDate()}. ${new Intl.DateTimeFormat('de-DE', { month: 'long' }).format(d)}, ${new Intl.DateTimeFormat('de-DE', { weekday: 'long' }).format(d)}` };
 
 function NavKnopf({ richtung, label, onClick }: { richtung: 'zurueck' | 'vor'; label: string; onClick: () => void }) {
   const Icon = richtung === 'zurueck' ? ChevronLeft : ChevronRight;
@@ -88,7 +89,7 @@ export function FortschrittSeite() {
             ))}
           </section>
 
-          <Karte className="flex flex-col gap-3 p-4!">
+          <Karte className="flex flex-col gap-3 px-3! py-4! sm:px-4!">
             <div className="flex items-center">
               <NavKnopf richtung="zurueck" label="Voriger Monat" onClick={() => verschiebeMonat(-1)} />
               <h2 className="flex-1 text-center font-display text-2xl font-bold" aria-live="polite">
@@ -96,7 +97,7 @@ export function FortschrittSeite() {
               </h2>
               <NavKnopf richtung="vor" label="Nächster Monat" onClick={() => verschiebeMonat(1)} />
             </div>
-            <div role="grid" aria-label="Trainingskalender" className="grid grid-cols-7 gap-1 text-center">
+            <div role="grid" aria-label="Trainingskalender" className="grid grid-cols-7 gap-y-1 text-center sm:gap-x-1">
               <div role="row" className="contents">
                 {WOCHENTAGE.map((w) => (
                   <span key={w} role="columnheader" className="py-1 text-xs font-semibold text-text-leise">
@@ -112,7 +113,8 @@ export function FortschrittSeite() {
                     const imMonat = tag.getMonth() === monat.monat;
                     const istHeute = schluessel === heuteSchluessel;
                     const gewaehlt = schluessel === gewaehlterTag;
-                    const label = `${formatiereDatum(tag.toISOString())}${anzahl > 0 ? `, ${anzahl} ${anzahl === 1 ? 'Training' : 'Trainings'}` : ''}`;
+                    // Name beginnt mit der sichtbaren Zahl (WCAG 2.5.3 „Label in Name“), z. B. „1. November, Sonntag, 1 Training“
+                    const label = `${tagName.format(tag)}${anzahl > 0 ? `, ${anzahl} ${anzahl === 1 ? 'Training' : 'Trainings'}` : ''}`;
                     return (
                       <span role="gridcell" key={schluessel} className="flex justify-center">
                         <button

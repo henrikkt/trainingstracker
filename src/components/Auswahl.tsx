@@ -42,7 +42,7 @@ export function Chip({ aktiv, onClick, children }: { aktiv: boolean; onClick: ()
       type="button"
       aria-pressed={aktiv}
       onClick={onClick}
-      className={`min-h-10 shrink-0 rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-colors ${
+      className={`min-h-11 min-w-11 shrink-0 rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-colors ${
         aktiv ? 'border-akzent bg-akzent text-akzent-text' : 'border-linie bg-flaeche text-text-leise hover:text-text'
       }`}
     >

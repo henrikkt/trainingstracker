@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { AppRahmen } from './components/AppRahmen.tsx';
+import { UpdateHinweis } from './components/UpdateHinweis.tsx';
 import { useSitzung } from './daten/sitzung.ts';
 import { EinladungSeite } from './seiten/EinladungSeite.tsx';
 import { LoginSeite } from './seiten/LoginSeite.tsx';
@@ -24,10 +25,14 @@ import { ZugaengeSeite } from './seiten/ZugaengeSeite.tsx';
  */
 export function App() {
   const sitzung = useSitzung();
-  if (sitzung.status === 'laedt') return null; // gespeicherte Sitzung wird gelesen (Sekundenbruchteile, auch offline)
+  // Service Worker immer registrieren (auch auf Login/Einladung) – sonst startet die App vor der
+  // ersten Anmeldung nicht offline und ist auf Android erst danach installierbar.
+  if (sitzung.status === 'laedt') return <UpdateHinweis />; // gespeicherte Sitzung wird gelesen (Sekundenbruchteile)
 
   return (
-    <Routes>
+    <>
+      <UpdateHinweis />
+      <Routes>
       <Route path="/einladung" element={<EinladungSeite />} />
       {sitzung.status === 'abgemeldet' ? (
         <Route path="*" element={<LoginSeite />} />
@@ -50,6 +55,7 @@ export function App() {
           <Route path="*" element={<Navigate to="/training" replace />} />
         </Route>
       )}
-    </Routes>
+      </Routes>
+    </>
   );
 }

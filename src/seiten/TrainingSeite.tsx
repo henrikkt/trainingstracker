@@ -54,7 +54,7 @@ export function TrainingSeite() {
                 </div>
               </>
             ) : (
-              <Link to="/plaene" className="text-center text-sm text-text-leise underline underline-offset-4 hover:text-text">
+              <Link to="/plaene" className="inline-flex min-h-12 items-center justify-center text-center text-sm text-text-leise underline underline-offset-4 hover:text-text">
                 Vorlage anlegen (Push, Pull, Beine …)
               </Link>
             )}

@@ -88,7 +88,7 @@ export function VorlageSeite() {
                     <IconKnopf icon={X} label={`${name} entfernen`} gefahr onClick={() => entfernen(i)} />
                   </div>
                   <Stepper label="Sätze" wert={vu.ziel.saetze} min={1} max={10} onChange={(saetze) => aendereUebung(i, { ...vu, ziel: { ...vu.ziel, saetze } })} />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <Stepper
                       label="Wdh. von"
                       wert={vu.ziel.wdh.min}
