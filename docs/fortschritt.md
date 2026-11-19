@@ -145,6 +145,7 @@ Prüfen: `gh api repos/henrikkt/trainingstracker/rulesets`, `…/code-scanning/d
 - **Supabase-Schlüssel:** neue Projekte nutzen Publishable Key (`sb_publishable_…`, öffentlich, in der App) und Secret Key (`sb_secret_…`, nur serverseitig). Die alten `anon`/`service_role`-Schlüssel werden Ende 2026 abgekündigt → wir nutzen die neuen.
 
 ## Offene Punkte / Merker
+- **CI-Runner:** `ubuntu-latest` ist seit Okt. 2026 Ubuntu 26.04. Dort hing `playwright install --with-deps webkit` (>15 min) → Job „Prüfen und bauen“ fest auf `ubuntu-24.04`. Alle Jobs haben jetzt `timeout-minutes`. Bei Playwright-Updates prüfen, ob 26.04 unterstützt wird.
 - **Supabase-Zugriffstoken (GitHub-Secret `SUPABASE_ACCESS_TOKEN`) läuft am 16.02.2027 ab** (90 Tage ab 18.11.2026). Erkennbar am roten CI-Job „Supabase ausrollen“; die App läuft weiter. Erneuern: neuen Token auf supabase.com/dashboard/account/tokens erzeugen, dann `gh secret set SUPABASE_ACCESS_TOKEN --repo henrikkt/trainingstracker`.
 - Beim Mergen von Dependabot-PRs auf Konflikte achten: Nach dem Merge von #1/#2 war der `features`-Block in `.devcontainer/devcontainer.json` leer (repariert in c90d63a).
 - Hauptpaket ist auf ~142 kB gzip gewachsen (Dexie, Router, Icons). Bei Bedarf in E9 prüfen (z. B. Seiten per lazy laden).

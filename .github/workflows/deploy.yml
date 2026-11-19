@@ -17,7 +17,10 @@ concurrency:
 jobs:
   pruefen:
     name: Prüfen und bauen
-    runs-on: ubuntu-latest
+    # Fest auf 24.04: ubuntu-latest ist seit Okt. 2026 Ubuntu 26.04, dort hängt die Installation der
+    # WebKit-Abhängigkeiten von Playwright (noch nicht offiziell unterstützt).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - name: Code holen
         uses: actions/checkout@v7
@@ -79,6 +82,7 @@ jobs:
   supabase:
     name: Datenbank und Zugriffsregeln (echtes Supabase)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Code holen
         uses: actions/checkout@v7
@@ -144,6 +148,7 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.SUPABASE_PROJECT_REF != ''
     needs: [pruefen, supabase]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     concurrency:
       group: supabase-deploy
       cancel-in-progress: false
@@ -180,6 +185,7 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [pruefen, supabase]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

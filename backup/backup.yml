@@ -19,6 +19,7 @@ jobs:
   backup:
     name: Datenbank sichern, verschlüsseln, committen
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Repo holen
         uses: actions/checkout@v7
