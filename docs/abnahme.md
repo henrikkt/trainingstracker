@@ -1,17 +1,17 @@
-# Abnahme Phase 1 – Stemm
+# Abnahme Phase 1 – Stemm✅ ok – iPhone 15 Pro, Safari (19.11.2026) |⏭️ vom Admin übersprungen (19.11.2026) – bei Bedarf später mit einem Android-Gerät aus dem Freundeskreis nachholen |✅ ok – iPhone 15 Pro (19.11.2026) |✅ ok – iPhone 15 Pro (19.11.2026) |✅ ok – iPhone 15 Pro (19.11.2026) |✅ ok – iPhone 15 Pro (19.11.2026) |✅ ok – iPhone 15 Pro (19.11.2026) |✅ ok – iPhone 15 Pro (19.11.2026) |✅ ok – iPhone 15 Pro (19.11.2026) |🔧 Problem (iPhone 15 Pro): Schrift oben verschwommen/unleserlich. **Behoben** (feste Fläche hinter Statusleiste/Dynamic Island, kein Weichzeichner mehr, Ränder als CSS-Variablen, WebKit-Layouttest auf 5 iPhone-Größen) – **erneute Prüfung durch den Admin offen** |
 
-Stand: 2026-11-19. Legende: ✅ erfüllt · 🤖 automatisch geprüft (CI bei jedem Push) · 🙋 manuell durch den Admin · ⏳ offen
+Stand: 2026-11-19 (nach Handy-Tests). Legende: ✅ erfüllt · 🤖 automatisch geprüft (CI bei jedem Push) · 🙋 manuell durch den Admin · ⏳ offen
 
 ## Abnahmekriterien aus dem Auftrag
 
 | # | Kriterium | Nachweis | Status |
 |---|---|---|---|
 | A1 | Ich kann mich anmelden, einen Freund einladen, und der Freund sieht nur seine eigenen Daten. | 🤖 `auth.spec`, `admin.spec`, RLS-Tests (PGlite + echtes Supabase, inkl. direktem API-Zugriff); 🙋 Admin angelegt, Einladung live getestet (18.11.2026) | ✅ |
-| A2 | Ein komplettes Training lässt sich im Flugmodus erfassen und wird danach korrekt synchronisiert. | 🤖 `sync.spec` (offline erfassen → online → Server-Stand geprüft → zweites Gerät); 🙋 Handy-Test M3 | 🤖 ✅ · 🙋 ⏳ |
-| A3 | Vorschläge fürs nächste Training erscheinen und sind nachvollziehbar. | 🤖 `training.spec` + Unit-Tests der Regeln; 🙋 Handy-Test M5 | 🤖 ✅ · 🙋 ⏳ |
+| A2 | Ein komplettes Training lässt sich im Flugmodus erfassen und wird danach korrekt synchronisiert. | 🤖 `sync.spec` (offline erfassen → online → Server-Stand geprüft → zweites Gerät); 🙋 Handy-Test M3 | ✅ |
+| A3 | Vorschläge fürs nächste Training erscheinen und sind nachvollziehbar. | 🤖 `training.spec` + Unit-Tests der Regeln; 🙋 Handy-Test M5 | ✅ |
 | A4a | Backup läuft automatisch. | Nächtlicher Workflow im Repo `trainingstracker-backups`, erster planmäßiger Lauf 19.11.2026 03:05 UTC erfolgreich | ✅ |
 | A4b | Die Wiederherstellung ist getestet. | 🤖 Rundlauf in der CI (Backup → Totalverlust → Wiederherstellung → Login mit altem Passwort, Wegwerf-Schlüssel). **Gemeinsamer Test mit dem echten privaten Schlüssel: bewusst verschoben (19.11.2026).** | ⏳ **offen** |
-| A5 | Die App ist auf iPhone und Android installierbar und live erreichbar. | 🤖 Manifest/Icons/Service Worker/Offline-Start (`start.spec`, `live.spec`); 🙋 Installation M1/M2 | 🤖 ✅ · 🙋 ⏳ |
+| A5 | Die App ist auf iPhone und Android installierbar und live erreichbar. | 🤖 Manifest/Icons/Service Worker/Offline-Start (`start.spec`, `live.spec`), iPhone-Layout mit WebKit auf 5 Größen (`iphone.spec`); 🙋 iPhone installiert (M1), Android übersprungen (M2) | ✅ iPhone · ⏭️ Android nicht geprüft |
 
 ## Sicherheit, Datenschutz, Qualität
 
@@ -26,6 +26,7 @@ Stand: 2026-11-19. Legende: ✅ erfüllt · 🤖 automatisch geprüft (CI bei je
 | Strikte CSP, keine Verstöße | Meta-CSP; Wachposten in **allen** E2E-Tests (CSP-Verstöße/JS-Fehler lassen Tests scheitern); Live-Rauchtest | ✅ |
 | Kontraste WCAG AA | Token-Test `kontrast.test.ts`; axe-core WCAG 2.2 AA auf allen Hauptseiten (Handy + Desktop) | ✅ |
 | Große Touch-Ziele | Automatische Messung auf dem Handy: alle Bedienelemente ≥ 44 px | ✅ |
+| Passt auf jedes iPhone | WebKit (Safari-Engine) auf iPhone SE, 13 mini, 15 Pro, 15 Pro Max, 16 Pro mit echten Randmaßen: kein Überlauf, Inhalt unter Statusleiste/Dynamic Island verdeckt, Navigation über dem Home-Balken, Pausentimer frei | ✅ |
 | Dependabot, npm audit ohne kritische Funde, CodeQL | Repo-Einstellungen; `npm audit`: 0 Funde | ✅ |
 | Kein Datenverlust bei Neuladen/Schließen | Jede Eingabe sofort in IndexedDB; E2E mit Neuladen mitten im Training | ✅ |
 
@@ -49,4 +50,5 @@ Bitte jeweils kurz zurückmelden: **ok** / **Problem: …** (Gerät + Browser da
 ## Offene Punkte
 
 - ⏳ **A4b – Wiederherstellung mit dem echten privaten Schlüssel** (bewusst verschoben am 19.11.2026). Anleitung: `backup/README.md` → „Wiederherstellen“. Mindestvariante: nur Schritt „Nur prüfen“ (entschlüsselt ein echtes Backup und zeigt die Zeilenzahlen, schreibt nichts).
-- ⏳ Manuelle Handy-Tests M1–M10.
+- ⏳ M10 nach der Korrektur auf dem iPhone 15 Pro erneut prüfen.
+- ⏭️ M2 (Android) übersprungen.

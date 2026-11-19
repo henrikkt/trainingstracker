@@ -8,7 +8,7 @@ import { useOnline } from '../hooks/useOnline.ts';
 /** Vollbild-Rahmen für Seiten vor dem Login (ohne Navigation). */
 export function AnmeldeRahmen({ titel, unterzeile, children }: { titel: string; unterzeile: string; children: ReactNode }) {
   return (
-    <main className="pt-sicher mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 pb-10">
+    <main className="pt-sicher px-sicher mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 pb-10">
       <div className="text-center">
         <p className="font-display text-6xl font-black tracking-tight" aria-hidden>
           Stemm<span className="text-akzent">.</span>

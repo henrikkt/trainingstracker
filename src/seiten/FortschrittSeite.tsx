@@ -175,7 +175,7 @@ export function FortschrittSeite() {
                     <span className="flex flex-col gap-0.5">
                       <span className="h-3 rounded-r bg-akzent" style={{ width: `${(z.saetze / maxSaetze) * 100}%` }} aria-hidden />
                       <span className="text-xs text-text-leise tabular-nums">
-                        {formatiereZahl(z.saetze)} Sätze{z.volumen > 0 ? ` · ${formatiereVolumen(z.volumen)}` : ''}
+                        {formatiereZahl(z.saetze)} {z.saetze === 1 ? 'Satz' : 'Sätze'}{z.volumen > 0 ? ` · ${formatiereVolumen(z.volumen)}` : ''}
                       </span>
                     </span>
                   </li>

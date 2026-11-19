@@ -108,7 +108,7 @@ export function LiveTrainingSeite() {
 
   return (
     <>
-      <header className="pt-sicher sticky top-0 z-20 -mx-4 flex items-center gap-3 border-b border-linie bg-grund/95 px-4 pb-3 backdrop-blur md:-mx-8 md:px-8 md:pt-6">
+      <header className="pt-sicher sticky top-0 z-20 -mx-4 flex items-center gap-3 border-b border-linie bg-grund px-4 pb-3 md:-mx-8 md:px-8 md:pt-6">
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-display text-3xl font-extrabold uppercase">{entwurf.titel ?? 'Training'}</h1>
           <p className="text-sm text-text-leise tabular-nums" aria-label="Trainingsdauer">

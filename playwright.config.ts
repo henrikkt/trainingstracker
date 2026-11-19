@@ -21,7 +21,6 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: basis,
-    channel: kanal || undefined,
     locale: 'de-DE',
     timezoneId: 'Europe/Berlin',
     serviceWorkers: 'allow',
@@ -35,10 +34,13 @@ export default defineConfig({
         timeout: 60_000,
       },
   projects: [
+    // iPhone-Layout mit WebKit (Safari-Engine) auf mehreren Gerätegrößen – nur e2e/iphone.spec.ts
+    { name: 'iphone', testMatch: /iphone.spec.ts/, use: { browserName: 'webkit' } },
     {
       name: 'handy',
+      testIgnore: /iphone.spec.ts/,
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium', channel: kanal || undefined, viewport: { width: 375, height: 667 } },
     },
-    { name: 'desktop', use: { viewport: { width: 1280, height: 900 } } },
+    { name: 'desktop', testIgnore: /iphone.spec.ts/, use: { channel: kanal || undefined, viewport: { width: 1280, height: 900 } } },
   ],
 });

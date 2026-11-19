@@ -18,7 +18,7 @@ Stand: 2026-11-19 (E9 läuft)
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | 🔄 automatische Prüfungen ✅ · Handy-Tests offen |
 
 ## Nächste Schritte
-1. **Admin (du):** Manuelle Handy-Tests M1–M10 aus [docs/abnahme.md](abnahme.md) durchgehen und zurückmelden; Claude trägt die Ergebnisse ein und behebt Funde.
+1. **Admin (du):** M10 (Schrift oben auf dem iPhone) nach dem Update erneut prüfen. Übrige Handy-Tests erledigt (siehe [docs/abnahme.md](abnahme.md)); M2 Android übersprungen.
 2. **Offen, bewusst verschoben (19.11.2026):** Wiederherstellungstest mit dem echten privaten age-Schlüssel (Abnahmepunkt A4b bleibt bis dahin **unerfüllt**). Anleitung in `backup/README.md`; Mindestvariante: nur „Nur prüfen“ (entschlüsseln + Zeilenzahlen, schreibt nichts). Claude bietet ihn am Ende der Abnahme erneut an.
 3. Danach: Phase 1 abschließen; Phase-2-Ideen (Teilen mit Freunden, Plate-Rechner, Supersätze, Aufwärmsätze, Passkeys, CSV-Import).
 
@@ -117,6 +117,8 @@ Stand: 2026-11-19 (E9 läuft)
   - **Service Worker wurde mit Backend erst nach dem Login registriert** (Registrierung steckte im App-Rahmen) → kein Offline-Start und auf Android keine Installation vor der ersten Anmeldung. Jetzt in `App.tsx` für jeden Zustand; Test in `auth.spec`.
   - **Live-Rauchtest** `e2e/live.spec.ts` (nur mit `LIVE=1 PW_BASE_URL=https://henrikkt.github.io/trainingstracker/`): CSP, Manifest, Icons, Service Worker, Offline-Start der Login-Seite.
   - Abnahme-Checkliste: [docs/abnahme.md](abnahme.md).
+  - **iPhone-Feinschliff (nach M10):** Ränder als CSS-Variablen `--sicher-oben/unten/links/rechts` (aus `env(safe-area-inset-*)`), feste Fläche `body::before` hinter Statusleiste/Dynamic Island (vorher scrollte Text sichtbar unter die Uhrzeit), kein `backdrop-blur`/Halbtransparenz mehr in Navigation und Trainings-Kopf, `px-sicher` für Querformat. **WebKit-Projekt „iphone“** (`e2e/iphone.spec.ts`) prüft 5 iPhone-Größen mit echten Randmaßen (simuliert über die Variablen) – läuft in der CI mit.
+  - Playwright-Screenshots in WebKit fügen ein `<style>` ein, das die CSP blockiert → der Wachposten ignoriert genau diese Meldung nur in Tests mit „Screenshot“ im Namen; dort `caret: 'initial'`. WebKit-Mobil ignoriert `scrollTo` → `scrollIntoViewIfNeeded()`.
 
 ## GitHub-Sicherheitseinstellungen
 Stand 2026-11-18, geprüft per `gh api` (GitHub CLI ist installiert und als `henrikkt` angemeldet).

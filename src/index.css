@@ -60,10 +60,41 @@
   }
 }
 
+/*
+ * Sichere Ränder (Notch, Dynamic Island, Statusleiste, Home-Balken, Querformat).
+ * Als Variablen, damit E2E-Tests die Werte echter iPhones simulieren können (e2e/iphone.spec.ts).
+ */
+:root {
+  --sicher-oben: env(safe-area-inset-top, 0px);
+  --sicher-unten: env(safe-area-inset-bottom, 0px);
+  --sicher-links: env(safe-area-inset-left, 0px);
+  --sicher-rechts: env(safe-area-inset-right, 0px);
+}
+
+/*
+ * Fester Hintergrund hinter Statusleiste und Dynamic Island: Die App läuft auf dem iPhone bis unter die
+ * Statusleiste (black-translucent). Ohne diese Fläche scrollt Text sichtbar unter Uhrzeit und Symbole.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--sicher-oben);
+  background: var(--color-grund);
+  z-index: 60;
+  pointer-events: none;
+}
+
 @utility pt-sicher {
-  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-top: max(0.75rem, var(--sicher-oben));
 }
 
 @utility pb-sicher {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--sicher-unten);
+}
+
+/* Seitenabstand, der im Querformat auch Notch/Dynamic Island an der Seite berücksichtigt */
+@utility px-sicher {
+  padding-left: max(1rem, var(--sicher-links));
+  padding-right: max(1rem, var(--sicher-rechts));
 }

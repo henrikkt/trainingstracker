@@ -25,7 +25,8 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - **Strikte CSP** (Meta-Tag, siehe `vite.config.ts`): keine Inline-Skripte/-Styles im HTML, keine externen Quellen/CDNs, Schriften selbst hosten.
 - **Keine Secrets und keine persönlichen Daten** im Code oder Git-Verlauf. Öffentlich sind nur `VITE_SUPABASE_URL` und `VITE_SUPABASE_PUBLISHABLE_KEY` (Repository-Variablen). Alles andere in GitHub Secrets bzw. bei Supabase.
 - Git: Identität nur lokal im Repo (GitHub-Noreply-Adresse). Nach jeder Etappe ein Commit; vorher müssen `npm run check` (Typecheck + Unit-Tests) grün sein, E2E möglichst auch.
-- Screenshots sparsam: pro Prüfung nur Handy (375 px) und Desktop.
+- Screenshots sparsam: pro Prüfung nur Handy (375 px) und Desktop; für iPhone-Layout `SCREENSHOTS=1 npx playwright test --project=iphone` (mit nachgebildeter Statusleiste).
+- iPhone: Ränder nur über `var(--sicher-oben/unten/links/rechts)` bzw. `pt-sicher`/`pb-sicher`/`px-sicher`, nie direkt `env(safe-area-inset-*)`. Keine halbtransparenten/weichgezeichneten Leisten.
 - Dexie-Schema nie in bestehenden Versionen ändern, sondern `this.version(n+1)` ergänzen.
 - Sync schreibt direkt in Dexie (`src/sync/motor.ts`), die App immer über `repo.ts` – nur so löst eine Nutzer-Änderung `beiLokalerAenderung` und damit den Sync aus.
 - Teil-Änderungen an bestehenden Datensätzen (Profil, Einstellungen) nur über `aktualisiere…`-Funktionen (Transaktion), nie `{...hookWert, ...aenderung}` speichern.

@@ -12,7 +12,7 @@ export function UpdateHinweis() {
   return (
     <div
       role="alert"
-      className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-linie bg-flaeche-hoch p-3 shadow-2xl md:bottom-6"
+      className="fixed inset-x-4 bottom-[calc(5rem+var(--sicher-unten))] z-30 mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-linie bg-flaeche-hoch p-3 shadow-2xl md:bottom-6"
     >
       <p className="flex-1 pl-1 text-sm">Neue Version verfügbar.</p>
       <Knopf variante="leise" onClick={() => setUpdateDa(false)}>

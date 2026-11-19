@@ -34,7 +34,7 @@ export function PausenLeiste() {
     <div
       role="timer"
       aria-label="Pausentimer"
-      className={`fixed inset-x-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-lg overflow-hidden rounded-3xl border shadow-2xl md:bottom-4 ${
+      className={`fixed inset-x-2 bottom-[calc(4.75rem+var(--sicher-unten))] z-30 mx-auto max-w-lg overflow-hidden rounded-3xl border shadow-2xl md:bottom-4 ${
         vorbei ? 'border-akzent bg-akzent text-akzent-text' : 'border-linie bg-flaeche-hoch'
       }`}
     >

@@ -16,11 +16,22 @@ export async function legeTrainingsAn(page: Page, trainings: { vorTagen: number;
   await page.goto('./#/training');
   await expect(page.getByRole('heading', { level: 1, name: 'Training' })).toBeVisible();
   await page.evaluate(async (liste) => {
-    const datenbank = await new Promise<IDBDatabase>((ok, fehler) => {
-      const anfrage = indexedDB.open('stemm');
-      anfrage.onsuccess = () => ok(anfrage.result);
-      anfrage.onerror = () => fehler(anfrage.error);
-    });
+    // Warten, bis die App (Dexie) ihre Tabellen angelegt hat – WebKit öffnet die Datenbank später als Chromium
+    let datenbank: IDBDatabase | undefined;
+    for (let versuch = 0; versuch < 50; versuch++) {
+      const offen = await new Promise<IDBDatabase>((ok, fehler) => {
+        const anfrage = indexedDB.open('stemm');
+        anfrage.onsuccess = () => ok(anfrage.result);
+        anfrage.onerror = () => fehler(anfrage.error);
+      });
+      if (offen.objectStoreNames.contains('trainings')) {
+        datenbank = offen;
+        break;
+      }
+      offen.close();
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    if (!datenbank) throw new Error('Datenbank der App nicht gefunden');
     const tx = datenbank.transaction('trainings', 'readwrite');
     liste.forEach((t, i) => {
       const start = new Date(Date.now() - t.vorTagen * 86_400_000 - 60_000);
