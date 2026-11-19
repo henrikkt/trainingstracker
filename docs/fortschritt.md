@@ -18,7 +18,7 @@ Stand: 2026-11-19 (E9 läuft)
 | E9 | Härtung & Abnahme: CSP, a11y, Installation iPhone/Android, Abnahme-Checkliste | 🔄 automatische Prüfungen ✅ · Handy-Tests offen |
 
 ## Nächste Schritte
-1. **Admin (du):** M10 (Schrift oben auf dem iPhone) nach dem Update erneut prüfen. Übrige Handy-Tests erledigt (siehe [docs/abnahme.md](abnahme.md)); M2 Android übersprungen.
+1. **Admin (du):** App vom Home-Bildschirm **entfernen und neu hinzufügen** (iOS liest den Statusleisten-Stil nur bei der Installation; vorher Sync-Symbol ✓ abwarten!), dann M10 (Schrift oben, springende Menüleiste) erneut prüfen. Übrige Handy-Tests erledigt (siehe [docs/abnahme.md](abnahme.md)); M2 Android übersprungen.
 2. **Offen, bewusst verschoben (19.11.2026):** Wiederherstellungstest mit dem echten privaten age-Schlüssel (Abnahmepunkt A4b bleibt bis dahin **unerfüllt**). Anleitung in `backup/README.md`; Mindestvariante: nur „Nur prüfen“ (entschlüsseln + Zeilenzahlen, schreibt nichts). Claude bietet ihn am Ende der Abnahme erneut an.
 3. Danach: Phase 1 abschließen; Phase-2-Ideen (Teilen mit Freunden, Plate-Rechner, Supersätze, Aufwärmsätze, Passkeys, CSV-Import).
 
@@ -145,6 +145,8 @@ Prüfen: `gh api repos/henrikkt/trainingstracker/rulesets`, `…/code-scanning/d
 - **Supabase-Schlüssel:** neue Projekte nutzen Publishable Key (`sb_publishable_…`, öffentlich, in der App) und Secret Key (`sb_secret_…`, nur serverseitig). Die alten `anon`/`service_role`-Schlüssel werden Ende 2026 abgekündigt → wir nutzen die neuen.
 
 ## Offene Punkte / Merker
+- **iOS 26.1+ und `apple-mobile-web-app-status-bar-style: black-translucent`:** iOS legt dann eine nicht abschaltbare Unschärfe über den oberen Bildschirmrand (M10). Tag entfernt → undurchsichtige Statusleiste in `theme-color` #0D0F12, App beginnt darunter (Test in `start.spec`). Die festen Flächen/Variablen für sichere Ränder bleiben (Home-Balken, Querformat, ältere iOS-Versionen). Änderungen am Statusleisten-Stil greifen erst nach Neuinstallation der App.
+- Entschlüsselungstest mit dem echten Schlüssel: vom Admin auf später verschoben (19.11.2026), A4b bleibt offen.
 - **CI-Runner:** `ubuntu-latest` ist seit Okt. 2026 Ubuntu 26.04. Dort hing `playwright install --with-deps webkit` (>15 min) → Job „Prüfen und bauen“ fest auf `ubuntu-24.04`. Alle Jobs haben jetzt `timeout-minutes`. Bei Playwright-Updates prüfen, ob 26.04 unterstützt wird.
 - **Supabase-Zugriffstoken (GitHub-Secret `SUPABASE_ACCESS_TOKEN`) läuft am 16.02.2027 ab** (90 Tage ab 18.11.2026). Erkennbar am roten CI-Job „Supabase ausrollen“; die App läuft weiter. Erneuern: neuen Token auf supabase.com/dashboard/account/tokens erzeugen, dann `gh secret set SUPABASE_ACCESS_TOKEN --repo henrikkt/trainingstracker`.
 - Beim Mergen von Dependabot-PRs auf Konflikte achten: Nach dem Merge von #1/#2 war der `features`-Block in `.devcontainer/devcontainer.json` leer (repariert in c90d63a).

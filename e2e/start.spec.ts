@@ -17,6 +17,10 @@ test('Start leitet auf Training um, strikte CSP, keine Konsolenfehler', async ({
   await expect(page).toHaveURL(/#\/training$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Training' })).toBeVisible();
 
+  // iOS 26.1+: black-translucent führt zu nicht abschaltbarer Unschärfe am oberen Rand (Rückmeldung M10)
+  await expect(page.locator('meta[name="apple-mobile-web-app-status-bar-style"][content="black-translucent"]')).toHaveCount(0);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#0D0F12');
+
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   expect(csp).toContain("script-src 'self'");
   expect(fehler).toEqual([]);

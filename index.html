@@ -9,7 +9,8 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Stemm" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Kein "black-translucent": Seit iOS 26.1 legt iOS sonst eine nicht abschaltbare Unschärfe über den oberen
+         Rand. Ohne das Tag zeichnet iOS eine undurchsichtige Statusleiste in theme-color, die App beginnt darunter. -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />

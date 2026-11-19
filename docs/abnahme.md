@@ -45,7 +45,7 @@ Bitte jeweils kurz zurückmelden: **ok** / **Problem: …** (Gerät + Browser da
 | M7 | **Lesbarkeit im Studio:** Kontrast/Schriftgröße bei hellem Licht ok | |
 | M8 | **Neuladen/Schließen:** Mitten im Training App wegwischen und neu öffnen → Training läuft weiter, nichts fehlt | |
 | M9 | **Update:** Nach einer neuen Version erscheint „Neue Version verfügbar“; „Aktualisieren“ lädt neu, nichts geht verloren | |
-| M10 | **Notch/Ränder:** Nichts wird von Notch, Statusleiste oder Home-Balken verdeckt | |
+| M10 | **Notch/Ränder:** Nichts wird von Notch, Statusleiste oder Home-Balken verdeckt | 🔧 Problem (iPhone 15 Pro): Schrift oben verschwommen; Menüleiste springt beim Start. 1. Versuch (feste Fläche hinter Statusleiste) half nicht. **Ursache: iOS 26.1+ legt bei `black-translucent` eine nicht abschaltbare Unschärfe über den oberen Rand → Tag entfernt** (undurchsichtige Statusleiste in theme-color). Erneute Prüfung nach Neuinstallation offen |
 
 ## Offene Punkte
 
