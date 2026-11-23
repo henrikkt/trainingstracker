@@ -32,3 +32,4 @@ e2e/screenshots/
 *.tmp
 .DS_Store
 Thumbs.db
+.playwright-cli/

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { findeUebung } from './katalog.ts';
 import { s, training } from './testhilfen.ts';
 import {
+  aktuellerSatz,
   abschliessen,
   aendereGewicht,
   aendereSatz,
@@ -29,6 +30,14 @@ describe('Verlauf und Plan einer Übung', () => {
     expect(verlaufSaetze([alt, laufend, neu], 'kniebeuge')).toEqual([[s(100, 8), s(100, 8), s(100, 8)], [s(100, 6), s(100, 5)]]);
     expect(verlaufSaetze([alt, neu], 'kniebeuge', 'neu')).toHaveLength(1);
     expect(verlaufSaetze([alt, neu], 'bankdruecken-lh')).toEqual([]);
+  });
+
+  it('frühere Einheiten mit Datum, höchstens drei, neueste zuerst', () => {
+    const t = (tag: string, id: string) => training(tag, { kniebeuge: [s(100, 5)] }, id);
+    const plan = planeUebung(kniebeuge, { trainings: [t('2026-11-01', 'a'), t('2026-11-03', 'b'), t('2026-11-05', 'c'), t('2026-11-07', 'd')] });
+    expect(plan.frueher.map((e) => e.start.slice(0, 10))).toEqual(['2026-11-07', '2026-11-05', '2026-11-03']);
+    expect(plan.frueher[0]!.saetze).toEqual([s(100, 5)]);
+    expect(planeUebung(kniebeuge, { trainings: [] }).frueher).toEqual([]);
   });
 
   it('plant mit Standard-Ziel (3 Sätze, Wdh.-Bereich der Übung) und Vorschlag', () => {
@@ -131,5 +140,19 @@ describe('Abschließen und Zusammenfassung', () => {
     const z = zusammenfassen(heute, [alt, heute]);
     expect(z).toMatchObject({ dauerMin: 60, volumen: 1050 + 640, saetze: 3, uebungen: 2 });
     expect(z.neueRekorde.map((r) => r.rekord.art).sort()).toEqual(['e1rm', 'gewicht', 'satzVolumen']);
+  });
+});
+
+describe('aktuellerSatz', () => {
+  const t = training('2026-11-23', { kniebeuge: [s(100, 5), s(100, 5, false)], 'bankdruecken-lh': [s(80, 8, false)] }, 'x');
+  it('aufgeklappter offener Satz', () => {
+    expect(aktuellerSatz(t, { uebung: 1, satz: 0 })).toEqual({ uebung: 1, satz: 0 });
+  });
+  it('aufgeklappter erledigter Satz → nächster offener danach', () => {
+    expect(aktuellerSatz(t, { uebung: 0, satz: 0 })).toEqual({ uebung: 0, satz: 1 });
+  });
+  it('nichts aufgeklappt → erster offener; alles erledigt → null', () => {
+    expect(aktuellerSatz(t, null)).toEqual({ uebung: 0, satz: 1 });
+    expect(aktuellerSatz(training('2026-11-23', { kniebeuge: [s(100, 5)] }, 'y'), null)).toBeNull();
   });
 });

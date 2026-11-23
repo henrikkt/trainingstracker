@@ -2,6 +2,7 @@ import { Flag, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { SyncPunkt } from '../components/SyncAnzeige.tsx';
+import { JetztDran, satzEditorSelektor } from '../components/training/JetztDran.tsx';
 import { PausenLeiste } from '../components/training/PausenLeiste.tsx';
 import { UebungImTraining } from '../components/training/UebungImTraining.tsx';
 import { Knopf } from '../components/ui.tsx';
@@ -11,6 +12,7 @@ import { aktualisiereUebungsEinstellung, jetzt, loescheTraining, speichereTraini
 import { effektivesFoto } from '../domain/foto.ts';
 import {
   abschliessen,
+  aktuellerSatz,
   aendereGewicht,
   aendereSatz,
   ersetzeUebung,
@@ -106,20 +108,42 @@ export function LiveTrainingSeite() {
   };
 
   const dauerSek = (uhr - Date.parse(entwurf.start)) / 1000;
+  const dran = aktuellerSatz(entwurf, aktiv);
+  const dranUebung = dran ? nachschlag(entwurf.uebungen[dran.uebung]!.uebungId) : undefined;
+  const dranSatz = dran ? entwurf.uebungen[dran.uebung]!.saetze[dran.satz] : undefined;
+  const dranPlan = dran ? planFuer(dran.uebung) : undefined;
 
   return (
     <>
-      <header className="pt-sicher sticky top-0 z-20 -mx-4 flex items-center gap-3 border-b border-linie bg-grund px-4 pb-3 md:-mx-8 md:px-8 md:pt-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-3xl font-extrabold uppercase">{entwurf.titel ?? 'Training'}</h1>
-          <p className="text-sm text-text-leise tabular-nums" aria-label="Trainingsdauer">
-            {formatiereUhr(dauerSek)}
-          </p>
+      <header data-kopfleiste="" className="pt-sicher sticky top-0 z-20 -mx-4 border-b border-linie bg-grund px-4 pb-3 md:-mx-8 md:px-8 md:pt-6">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-display text-3xl font-extrabold uppercase">{entwurf.titel ?? 'Training'}</h1>
+            <p className="text-sm text-text-leise tabular-nums" aria-label="Trainingsdauer">
+              {formatiereUhr(dauerSek)}
+            </p>
+          </div>
+          <SyncPunkt />
+          <Knopf icon={Flag} onClick={() => void beenden()}>
+            Beenden
+          </Knopf>
         </div>
-        <SyncPunkt />
-        <Knopf icon={Flag} onClick={() => void beenden()}>
-          Beenden
-        </Knopf>
+        {dran && dranUebung && dranSatz && (
+          <JetztDran
+            name={dranUebung.name}
+            satzNummer={dran.satz + 1}
+            saetzeGesamt={entwurf.uebungen[dran.uebung]!.saetze.length}
+            satz={dranSatz}
+            empfohlen={Boolean(dranPlan && dranPlan.vorschlag.regel !== 'erstes-mal' && dranPlan.vorschlag.gewicht === dranSatz.gewicht)}
+            foto={effektivesFoto(dranUebung, einstellungen.get(dranUebung.id), import.meta.env.BASE_URL)}
+            notiz={einstellungen.get(dranUebung.id)?.notiz}
+            onSpringen={() => {
+              setAktiv(dran);
+              // nach dem Aufklappen zum Satz scrollen (auch wenn er schon offen war)
+              requestAnimationFrame(() => document.querySelector(satzEditorSelektor(dran.uebung, dran.satz))?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+            }}
+          />
+        )}
       </header>
 
       <div className="flex flex-col gap-4 pt-4 pb-28">
@@ -128,6 +152,7 @@ export function LiveTrainingSeite() {
           <UebungImTraining
             key={`${ue.uebungId}-${u}`}
             ue={ue}
+            index={u}
             uebung={nachschlag(ue.uebungId)}
             foto={effektivesFoto(nachschlag(ue.uebungId), einstellungen.get(ue.uebungId), import.meta.env.BASE_URL)}
             notiz={einstellungen.get(ue.uebungId)?.notiz}

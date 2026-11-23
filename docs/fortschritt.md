@@ -60,6 +60,11 @@ Stand: 2026-11-23 (E9 läuft; Studio/Fotos ergänzt)
   - Pausentimer startet nach dem Abhaken (Pause der Übung bzw. Profil-Standard), speichert den Endzeitpunkt in localStorage (überlebt Neuladen), ±15 s, Vibration (nur Android) + 3 Pieptöne (Ton wird beim Abhaken per Nutzer-Geste entsperrt). Liegt das Ende beim Zurückkehren schon über 6 s zurück, wird nicht mehr nachträglich gepiept.
   - Wake Lock hält den Bildschirm während des Trainings an.
   - Beenden: nicht abgehakte Sätze und leere Übungen werden verworfen (mit Rückfrage); ohne erledigten Satz wird das Training verworfen. Zusammenfassung mit Dauer, Volumen, Sätzen, neuen Rekorden (gold) und Übungen.
+  - **Ergänzung (23.11.2026):** Training übersichtlicher:
+    - **Leiste „Jetzt dran“** fest unter der Kopfzeile: aktueller Satz (`aktuellerSatz`: aufgeklappter offener Satz, sonst nächster offener) mit Foto, Gewicht × Wdh. (vorbelegt mit der Empfehlung, Hinweis „empfohlen“) und Einstellung (bricht um, nie abgeschnitten). Tipp klappt den Satz auf und scrollt hin – auch nach „Zuklappen“.
+    - **Verlauf:** Übungskarte zeigt die letzten 3 Einheiten mit Datum (`plan.frueher`), darunter die Empfehlung für heute.
+    - **Scrollen:** Beim ersten Satz einer Übung wird die ganze Karte gezeigt, wenn der Satz-Editor dann noch ganz ins Bild passt (`lib/scrollen.ts`).
+    - **Arbeitsweise:** UI-Änderungen werden zusätzlich live mit `playwright-cli` geprüft (siehe CLAUDE.md).
   - **Ergänzung (23.11.2026):** Studios, Fotos, Einstellungsnotizen:
     - **Studio** „Kraftkultur“ (Profil: „Mein Studio“, Standard Kraftkultur, „Keins“ möglich). Übungsauswahl und Katalog starten mit dem Studio-Filter (Umschalter Kraftkultur | Alle Übungen); findet die Suche nur außerhalb des Studios etwas, gibt es einen Hinweis mit „Alle Übungen zeigen“. Eigene Übungen: Häkchen „Gibt es bei Kraftkultur“ (beim Anlegen vorbelegt). **Vorläufig** gehören alle freien Katalog-Übungen (ohne „Maschine“) zu Kraftkultur, bis die echte Geräteliste da ist.
     - **Gemeinsame Fotos nur über den Code** (Studio-Katalog, für alle sichtbar). Fotos aus der App sind persönlich: JPEG-Data-URL in der Übungseinstellung (max. 480 px, ≤ 60 000 Zeichen), laufen über Sync und Backup. Eigenes Foto hat Vorrang vor dem Katalog-Foto.

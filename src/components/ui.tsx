@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from 'react';
 import { ChevronLeft, type LucideIcon } from 'lucide-react';
 import { Link, NavLink } from 'react-router';
 import { SyncPunkt } from './SyncAnzeige.tsx';
@@ -37,8 +37,12 @@ export function Knopf({ variante = 'primaer', gross = false, icon: Icon, classNa
   );
 }
 
-export function Karte({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-3xl bg-flaeche p-5 ${className}`}>{children}</section>;
+export function Karte({ children, className = '', ...rest }: { children: ReactNode; className?: string } & Omit<ComponentProps<'section'>, 'className' | 'children'>) {
+  return (
+    <section className={`rounded-3xl bg-flaeche p-5 ${className}`} {...rest}>
+      {children}
+    </section>
+  );
 }
 
 /** Seitenkopf mit großer, schmaler Überschrift; optional Zurück-Link und Aktion rechts. */

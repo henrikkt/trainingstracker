@@ -30,6 +30,13 @@ export function formatiereDatum(iso: string): string {
   return datumFormat.format(new Date(iso));
 }
 
+const kurzDatumFormat = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit" });
+
+/** ISO-Zeitpunkt → "18.11." (lokale Zeit, kompakt fürs Training) */
+export function formatiereKurzDatum(iso: string): string {
+  return kurzDatumFormat.format(new Date(iso));
+}
+
 /** Minuten → "52 min" bzw. "1:05 h" */
 export function formatiereDauer(minuten: number): string {
   if (minuten < 60) return `${minuten} min`;

@@ -69,10 +69,34 @@ test('Training aus Vorlage erfassen, nach Neuladen fortsetzen, Zusammenfassung u
   await page.getByRole('link', { name: 'Zurück' }).click();
   await expect(page.getByRole('list', { name: 'Letzte Trainings' })).toContainText('Beine');
   await page.getByRole('button', { name: 'Vorlage Beine starten' }).click();
-  await expect(kniebeuge).toContainText('Letztes Mal: 3 × 8 × 100 kg');
+  await expect(kniebeuge).toContainText('Letztes Mal:');
+  await expect(page.getByRole('list', { name: 'Frühere Trainings Kniebeuge (Langhantel)' }).getByRole('listitem')).toHaveText([/^\d\d\.\d\d\.3 × 8 × 100 kg$/]);
   await expect(kniebeuge).toContainText('Heute: 105 kg × 5 Wdh.');
   await expect(kniebeuge).toContainText('Alle 3 Sätze mit 8 Wdh. bei 100 kg geschafft → +5 kg, Ziel wieder 5 Wdh.');
   await expect(feld(page.getByRole('region', { name: 'Satz 1 bearbeiten' }), 'Gewicht')).toHaveValue('105');
+  // Leiste „Jetzt dran“: aktueller Satz mit vorausgewähltem empfohlenem Gewicht
+  await expect(page.getByRole('group', { name: 'Jetzt dran' })).toContainText('Kniebeuge (Langhantel) · Satz 1/3');
+  await expect(page.getByRole('group', { name: 'Jetzt dran' })).toContainText('105 kg × 5empfohlen');
+});
+
+test('Leiste „Jetzt dran“ folgt dem aktuellen Satz und springt nach dem Zuklappen wieder hin', async ({ page }) => {
+  await page.goto('./#/plaene');
+  await page.getByRole('button', { name: 'Beispiel Push übernehmen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Push' })).toBeVisible();
+  await page.goto('./#/training');
+  await page.getByRole('button', { name: 'Vorlage Push starten' }).click();
+  const leiste = page.getByRole('group', { name: 'Jetzt dran' });
+  await expect(leiste).toContainText('Bankdrücken (Langhantel) · Satz 1/3');
+
+  await page.getByRole('region', { name: 'Satz 1 bearbeiten' }).getByRole('button', { name: 'Satz abhaken' }).click();
+  await expect(leiste).toContainText('Bankdrücken (Langhantel) · Satz 2/3');
+
+  // Zuklappen: kein Satz offen, die Leiste zeigt trotzdem den aktuellen; Tipp klappt ihn wieder auf
+  await page.getByRole('button', { name: 'Zuklappen' }).click();
+  await expect(page.getByRole('region', { name: /Satz \d bearbeiten/ })).toHaveCount(0);
+  await expect(leiste).toContainText('Satz 2/3');
+  await leiste.getByRole('button', { name: /zum Satz springen/ }).click();
+  await expect(page.getByRole('region', { name: 'Satz 2 bearbeiten' })).toBeInViewport();
 });
 
 test('Freies Training komplett offline erfassen', async ({ page, context }) => {

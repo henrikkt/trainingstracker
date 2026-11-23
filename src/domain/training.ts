@@ -11,18 +11,34 @@ import type { ProfilEinstellungen, Satz, Training, TrainingsUebung, Uebung, Uebu
 
 /** Sätze einer Übung aus abgeschlossenen Trainings, neuestes Training zuerst; Trainings ohne erledigte Sätze entfallen. */
 export function verlaufSaetze(trainings: readonly Training[], uebungId: string, ausserTrainingId?: string): Satz[][] {
+  return verlaufEinheiten(trainings, uebungId, ausserTrainingId).map((e) => e.saetze);
+}
+
+/** Frühere Einheit einer Übung: Startzeitpunkt des Trainings und die erledigten Sätze. */
+export interface FruehereEinheit {
+  start: string;
+  saetze: Satz[];
+}
+
+/** Wie verlaufSaetze, aber mit Datum (für „Früher: 16.11. · 3 × 8 × 80 kg“). */
+export function verlaufEinheiten(trainings: readonly Training[], uebungId: string, ausserTrainingId?: string): FruehereEinheit[] {
   return trainings
     .filter((t) => t.ende && t.id !== ausserTrainingId)
     .sort((a, b) => b.start.localeCompare(a.start))
-    .map((t) => t.uebungen.filter((ue) => ue.uebungId === uebungId).flatMap((ue) => zaehlendeSaetze(ue.saetze)))
-    .filter((saetze) => saetze.length > 0);
+    .map((t) => ({ start: t.start, saetze: t.uebungen.filter((ue) => ue.uebungId === uebungId).flatMap((ue) => zaehlendeSaetze(ue.saetze)) }))
+    .filter((e) => e.saetze.length > 0);
 }
+
+/** So viele frühere Einheiten zeigt das Training pro Übung */
+export const FRUEHERE_EINHEITEN = 3;
 
 export interface UebungsPlan {
   ziel: UebungsZiel;
   vorschlag: Vorschlag;
   /** Erledigte Sätze des letzten Trainings dieser Übung */
   letztes?: Satz[];
+  /** Die letzten (bis zu 3) Einheiten dieser Übung, neueste zuerst */
+  frueher: FruehereEinheit[];
   pauseSek: number;
 }
 
@@ -40,11 +56,13 @@ export function planeUebung(
 ): UebungsPlan {
   const eff = effektiveEinstellungen(uebung, kontext.einstellung, kontext.profil);
   const ziel = kontext.ziel ?? { saetze: 3, wdh: eff.wdhBereich };
-  const verlauf = verlaufSaetze(kontext.trainings, uebung.id, kontext.ausserTrainingId);
+  const einheiten = verlaufEinheiten(kontext.trainings, uebung.id, kontext.ausserTrainingId);
+  const verlauf = einheiten.map((e) => e.saetze);
   return {
     ziel,
     vorschlag: vorschlagFuerNaechstesMal({ verlauf, ziel, steigerung: eff.steigerung }),
     letztes: verlauf[0],
+    frueher: einheiten.slice(0, FRUEHERE_EINHEITEN),
     pauseSek: eff.pauseSek,
   };
 }
@@ -123,6 +141,16 @@ export function naechsterOffenerSatz(t: Training, ab?: SatzPosition): SatzPositi
   const start = ab ? alle.findIndex((p) => p.uebung === ab.uebung && p.satz === ab.satz) + 1 : 0;
   const reihenfolge = [...alle.slice(start), ...alle.slice(0, start)];
   return reihenfolge.find((p) => !t.uebungen[p.uebung]!.saetze[p.satz]!.erledigt) ?? null;
+}
+
+/**
+ * Der Satz, an dem man gerade dran ist (Leiste „Jetzt dran“): der aufgeklappte, solange er offen ist;
+ * sonst der nächste offene danach bzw. ohne aufgeklappten Satz der erste offene. null = alles erledigt.
+ */
+export function aktuellerSatz(t: Training, aufgeklappt: SatzPosition | null): SatzPosition | null {
+  const satz = aufgeklappt ? t.uebungen[aufgeklappt.uebung]?.saetze[aufgeklappt.satz] : undefined;
+  if (aufgeklappt && satz && !satz.erledigt) return aufgeklappt;
+  return naechsterOffenerSatz(t, satz ? aufgeklappt! : undefined);
 }
 
 export function offeneSaetze(t: Training): number {

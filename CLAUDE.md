@@ -35,6 +35,15 @@ Betrieb vollständig online und kostenlos: Frontend auf GitHub Pages, Backend Su
 - E2E-Selektoren: Stepper-Felder per `getByRole('textbox', { name, exact: true })` (die –/+-Knöpfe enthalten den Feldnamen); Listen mit `aria-label` eindeutig machen.
 - `docs/fortschritt.md` und diese Datei nach jeder Etappe aktualisieren.
 
+## Live-Prüfung mit playwright-cli (Pflicht)
+Bei **jeder UI-Änderung** und immer, wenn die App angesehen/geprüft werden soll, zusätzlich zu den Tests live im sichtbaren Browser prüfen (`@playwright/cli`, global installiert):
+1. `npm run build:pages`, dann `npm run preview:pages` im Hintergrund.
+2. `playwright-cli open --headed --browser=msedge http://localhost:4174/trainingstracker/` → `playwright-cli resize 375 667` (iPhone SE) und `390 844`.
+3. Den geänderten Ablauf durchklicken (`click`/`fill` mit Playwright-Locatoren wie `"getByRole('button', { name: '…' })"`), `screenshot --filename=<Scratchpad>/…png` ansehen, `playwright-cli console` muss **0 Fehler/Warnungen** zeigen. Auffälligkeiten melden.
+4. Nach einem Neubau im offenen Browser Service Worker + Caches leeren (`eval` mit `getRegistrations()`/`caches.delete`), sonst läuft die alte Version (Updates nur auf Tipp).
+5. Vor `npx playwright test` den Vorschau-Server beenden (Port 4174 wird sonst belegt). `.playwright-cli/` ist in `.gitignore`.
+- Die veröffentlichte App nur bis zur Login-Seite (kein echtes Konto/Passwort verwenden).
+
 ## Befehle
 | Befehl | Zweck |
 |---|---|
@@ -61,7 +70,7 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
 - `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/einladung` (ohne Login erreichbar), `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`, `/profil/zugaenge` (nur Admin)
 - `src/sync/` – Synchronisierung: `abbildung.ts` (lokal ↔ Server, Konfliktregel), `motor.ts` (Push/Pull, Server-Schnittstelle, Fehlerarten), `supabaseServer.ts`, `dienst.ts` (Auslöser, Status, `useSyncStatus`), `testServer.ts` (nachgebauter Server für Tests)
 - `src/components/SyncAnzeige.tsx` (`SyncPunkt` im Seitenkopf), `SyncKarte.tsx` (Profil)
-- `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
+- `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, Verlauf der letzten 3 Male, aufgeklappter Satz-Editor), `JetztDran.tsx` (feste Leiste mit aktuellem Satz), `PausenLeiste.tsx`
 - `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`), `bild.ts` (Foto per Canvas verkleinern)
 - `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:
   - `typen.ts` (Übung, Satz, Training, Muskelgruppen, Geräte)

@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { fasseSaetzeZusammen } from '../../domain/letztesMal.ts';
 import type { UebungsPlan } from '../../domain/training.ts';
 import type { Intensitaet, ProfilEinstellungen, Satz, TrainingsUebung, Uebung } from '../../domain/typen.ts';
-import { formatiereGewicht, formatiereZahl } from '../../lib/format.ts';
+import { formatiereGewicht, formatiereKurzDatum, formatiereZahl } from '../../lib/format.ts';
 import { bereinigeNotiz, NOTIZ_MAX } from '../../domain/foto.ts';
+import { scrollZiel } from '../../lib/scrollen.ts';
 import { Chip, TextFeld } from '../Auswahl.tsx';
 import { FotoKnopf } from '../Foto.tsx';
 import { Stepper } from '../Stepper.tsx';
@@ -31,6 +32,8 @@ interface Props {
   /** Einstellungsnotiz der Übung, z. B. „Sitz Stufe 4“ */
   notiz?: string;
   onNotizAendern: (notiz: string | undefined) => void;
+  /** Position der Übung im Training (für den Sprung aus der Leiste „Jetzt dran“) */
+  index: number;
 }
 
 function satzText(s: Satz, intensitaet: Intensitaet): string {
@@ -40,14 +43,14 @@ function satzText(s: Satz, intensitaet: Intensitaet): string {
 }
 
 /** Eine Übung im laufenden Training: „Letztes Mal“, Vorschlag, Sätze. */
-export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAktivieren, onSatzAendern, onAbhaken, onSatzHinzufuegen, onSatzEntfernen, onUebungEntfernen, foto, notiz, onNotizAendern }: Props) {
+export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAktivieren, onSatzAendern, onAbhaken, onSatzHinzufuegen, onSatzEntfernen, onUebungEntfernen, foto, notiz, onNotizAendern, index }: Props) {
   const [notizOffen, setNotizOffen] = useState(false);
   const name = uebung?.name ?? 'Unbekannte Übung';
   const erledigt = ue.saetze.filter((s) => s.erledigt).length;
   const v = plan?.vorschlag;
 
   return (
-    <Karte className="flex flex-col gap-3 p-4!">
+    <Karte className="flex flex-col gap-3 p-4!" data-uebungskarte={index}>
       <div className="flex items-start gap-2">
         {foto && <FotoKnopf src={foto} name={name} />}
         <div className="min-w-0 flex-1">
@@ -86,10 +89,24 @@ export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAkti
 
       {plan && (
         <div className="flex flex-col gap-1 rounded-2xl bg-grund p-3 text-sm">
-          <p>
-            <span className="text-text-leise">Letztes Mal: </span>
-            <span className="font-semibold tabular-nums">{plan.letztes ? fasseSaetzeZusammen(plan.letztes) : 'noch nie gemacht'}</span>
-          </p>
+          {plan.frueher.length === 0 ? (
+            <p>
+              <span className="text-text-leise">Letztes Mal: </span>
+              <span className="font-semibold">noch nie gemacht</span>
+            </p>
+          ) : (
+            <div>
+              <p className="text-text-leise">{plan.frueher.length === 1 ? 'Letztes Mal:' : `Letzte ${plan.frueher.length} Male:`}</p>
+              <ul aria-label={`Frühere Trainings ${name}`} className="flex flex-col">
+                {plan.frueher.map((e) => (
+                  <li key={e.start} className="flex gap-2 tabular-nums">
+                    <span className="w-12 shrink-0 text-text-leise">{formatiereKurzDatum(e.start)}</span>
+                    <span className="font-semibold">{fasseSaetzeZusammen(e.saetze)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {v && v.regel !== 'erstes-mal' && (
             <p className="flex items-start gap-1.5">
               <Lightbulb aria-hidden size={16} className="mt-0.5 shrink-0 text-akzent" />
@@ -178,14 +195,27 @@ function SatzEditor({
   // Beim Aufklappen (z. B. automatisch nach dem Abhaken) in den sichtbaren Bereich holen –
   // die Scroll-Ränder halten Abstand zur Kopfzeile oben und zu Pausenleiste/Navigation unten.
   useEffect(() => {
-    ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const el = ref.current;
+    if (!el) return;
+    // Erster Satz einer Übung: möglichst die ganze Karte zeigen (Name, Foto, Einstellung)
+    const karte = el.closest('[data-uebungskarte]');
+    if (nummer === 1 && karte) {
+      const kopf = document.querySelector('[data-kopfleiste]')?.getBoundingClientRect().bottom ?? 0;
+      const frei = { oben: kopf + 12, unten: window.innerHeight - (parseFloat(getComputedStyle(el).scrollMarginBottom) || 0) };
+      const karteOben = karte.getBoundingClientRect().top;
+      if (scrollZiel(true, karteOben, el.getBoundingClientRect().bottom, frei) === 'karte') {
+        window.scrollBy({ top: karteOben - frei.oben, behavior: 'smooth' });
+        return;
+      }
+    }
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, []);
 
   return (
     <section
       ref={ref}
       aria-label={`Satz ${nummer} bearbeiten`}
-      className={`flex scroll-mt-28 scroll-mb-44 flex-col gap-3 rounded-2xl border-2 p-3 md:scroll-mb-28 ${satz.erledigt ? 'border-linie' : 'border-akzent'} bg-grund`}
+      className={`flex scroll-mt-52 scroll-mb-44 flex-col gap-3 rounded-2xl border-2 p-3 md:scroll-mb-28 ${satz.erledigt ? 'border-linie' : 'border-akzent'} bg-grund`}
     >
       <div className="-my-1 flex items-center gap-1">
         <span className="flex-1 font-display text-xl font-bold">Satz {nummer}</span>

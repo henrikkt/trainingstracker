@@ -79,7 +79,10 @@ test('Foto und Einstellungsnotiz: in den Übungseinstellungen, im Training, nach
   await auswahl.getByRole('button', { name: /Kniebeuge \(Langhantel\)/ }).click();
   await auswahl.getByRole('button', { name: '1 Übung hinzufügen' }).click();
 
-  await page.getByRole('button', { name: 'Foto Kniebeuge (Langhantel) ansehen' }).click();
+  // Leiste „Jetzt dran“: Foto und Einstellung immer sichtbar
+  const leiste = page.getByRole('group', { name: 'Jetzt dran' });
+  await expect(leiste).toContainText('Ablage Loch 7');
+  await leiste.getByRole('button', { name: 'Foto Kniebeuge (Langhantel) ansehen' }).click();
   await expect(page.getByRole('dialog', { name: 'Kniebeuge (Langhantel)' }).getByRole('img', { name: 'Foto Kniebeuge (Langhantel)' })).toBeVisible();
   await page.keyboard.press('Escape');
 
