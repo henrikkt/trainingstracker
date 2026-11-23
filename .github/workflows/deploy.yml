@@ -50,8 +50,11 @@ jobs:
       - name: Build ohne Backend (lokaler Modus) für die E2E-Tests
         run: npm run build:pages
 
+      # Mit Cache für Browser und Ubuntu-Systempakete (der apt-Spiegel war zeitweise sehr langsam)
       - name: Playwright-Browser installieren
-        run: npx playwright install --with-deps chromium webkit
+        uses: ./.github/actions/playwright-installieren
+        with:
+          browser: chromium webkit
 
       - name: End-to-End-Tests (lokaler Modus)
         run: npm run test:e2e
@@ -115,7 +118,9 @@ jobs:
         run: npm run build:pages
 
       - name: Playwright-Browser installieren
-        run: npx playwright install --with-deps chromium
+        uses: ./.github/actions/playwright-installieren
+        with:
+          browser: chromium
 
       - name: E2E – Login, Einladung, Reset, Kontowechsel, Zugänge, Konto löschen, Sync offline → online
         run: npx playwright test auth admin sync

@@ -1,0 +1,76 @@
+name: Playwright-Browser installieren (mit Cache)
+description: >-
+  Installiert Playwright-Browser samt Ubuntu-Systempaketen. Der langsame Teil ist nicht der Browser-Download
+  (wenige Sekunden), sondern apt: die ~126 MB Systempakete kamen vom Ubuntu-Spiegel teils mit ~200 kB/s (10 min).
+  Deshalb werden die .deb-Dateien und die Browser zwischengespeichert.
+inputs:
+  browser:
+    description: Browser, durch Leerzeichen getrennt (z. B. "chromium webkit")
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Cache-Schlüssel bestimmen
+      id: schluessel
+      shell: bash
+      env:
+        BROWSER: ${{ inputs.browser }}
+      run: |
+        playwright="$(npx playwright --version | awk '{print $2}')"
+        ubuntu="$(lsb_release -rs)"
+        browser="$(echo "$BROWSER" | tr ' ' '-')"
+        echo "apt=pw-apt-ubuntu${ubuntu}-${browser}-${playwright}" >> "$GITHUB_OUTPUT"
+        echo "apt-praefix=pw-apt-ubuntu${ubuntu}-${browser}-" >> "$GITHUB_OUTPUT"
+        echo "browser=pw-browser-${browser}-${playwright}" >> "$GITHUB_OUTPUT"
+
+    # Systempakete: auch ältere Stände sind nützlich (nach einem Playwright-Update ändert sich meist wenig)
+    - name: Systempakete aus dem Cache holen
+      id: apt
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/apt-pakete
+        key: ${{ steps.schluessel.outputs.apt }}
+        restore-keys: ${{ steps.schluessel.outputs.apt-praefix }}
+
+    - name: Browser aus dem Cache holen
+      id: browser
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ steps.schluessel.outputs.browser }}
+
+    - name: Zwischengespeicherte Systempakete für apt bereitlegen
+      if: steps.apt.outputs.cache-matched-key != ''
+      shell: bash
+      run: |
+        sudo cp ~/apt-pakete/*.deb /var/cache/apt/archives/
+        echo "$(ls ~/apt-pakete | wc -l) Pakete aus dem Cache"
+
+    - name: Browser und Systempakete installieren
+      shell: bash
+      env:
+        BROWSER: ${{ inputs.browser }}
+      # $BROWSER bewusst ohne Anführungszeichen: mehrere Browser als einzelne Argumente
+      run: npx playwright install --with-deps $BROWSER
+
+    - name: Systempakete für den Cache sammeln
+      if: steps.apt.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ~/apt-pakete
+        cp /var/cache/apt/archives/*.deb ~/apt-pakete/ 2>/dev/null || true
+        echo "$(ls ~/apt-pakete | wc -l) Pakete gesammelt"
+
+    - name: Systempakete im Cache speichern
+      if: steps.apt.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: ~/apt-pakete
+        key: ${{ steps.schluessel.outputs.apt }}
+
+    - name: Browser im Cache speichern
+      if: steps.browser.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ steps.schluessel.outputs.browser }}
