@@ -6,7 +6,18 @@ import { Knopf } from './ui.tsx';
 export type UebungsDaten = Pick<Uebung, 'name' | 'muskel' | 'geraet' | 'nebenMuskeln'>;
 
 /** Formular für eigene Übungen (anlegen und bearbeiten). */
-export function EigeneUebungFormular({ start, knopfText, onSpeichern }: { start?: UebungsDaten; knopfText: string; onSpeichern: (daten: UebungsDaten) => void }) {
+export function EigeneUebungFormular({
+  start,
+  knopfText,
+  onSpeichern,
+  fokus = !start,
+}: {
+  start?: Partial<UebungsDaten>;
+  knopfText: string;
+  onSpeichern: (daten: UebungsDaten) => void;
+  /** Namensfeld beim Öffnen fokussieren (Standard: nur beim Neuanlegen) */
+  fokus?: boolean;
+}) {
   const [name, setName] = useState(start?.name ?? '');
   const [muskel, setMuskel] = useState<Muskelgruppe>(start?.muskel ?? 'brust');
   const [geraet, setGeraet] = useState<Geraet>(start?.geraet ?? 'langhantel');
@@ -21,7 +32,7 @@ export function EigeneUebungFormular({ start, knopfText, onSpeichern }: { start?
         if (gueltig) onSpeichern({ name: name.trim(), muskel, geraet, nebenMuskeln: neben.filter((m) => m !== muskel) });
       }}
     >
-      <TextFeld label="Name" wert={name} onChange={setName} platzhalter="z. B. Landmine Press" autoFocus={!start} />
+      <TextFeld label="Name" wert={name} onChange={setName} platzhalter="z. B. Landmine Press" autoFocus={fokus} />
       <div className="grid grid-cols-2 gap-3">
         <AuswahlFeld label="Muskelgruppe" wert={muskel} onChange={setMuskel} optionen={MUSKELGRUPPEN.map((m) => ({ wert: m, text: MUSKELGRUPPEN_NAMEN[m] }))} />
         <AuswahlFeld label="Gerät" wert={geraet} onChange={setGeraet} optionen={GERAETE.map((g) => ({ wert: g, text: GERAETE_NAMEN[g] }))} />

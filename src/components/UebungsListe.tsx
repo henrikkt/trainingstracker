@@ -1,4 +1,4 @@
-import { Check, Search } from 'lucide-react';
+import { Check, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { sucheUebungen } from '../domain/katalog.ts';
 import { GERAETE_NAMEN, MUSKELGRUPPEN, MUSKELGRUPPEN_NAMEN, type Muskelgruppe, type Uebung } from '../domain/typen.ts';
@@ -9,11 +9,14 @@ export function UebungsListe({
   uebungen,
   onWaehlen,
   ausgewaehlt,
+  onNeu,
 }: {
   uebungen: readonly Uebung[];
   onWaehlen: (uebung: Uebung) => void;
   /** Bei Mehrfachauswahl: IDs mit Haken */
   ausgewaehlt?: ReadonlySet<string>;
+  /** Zeigt „Neue Übung anlegen“; bekommt Suchtext und Muskelfilter als Vorschlag mit */
+  onNeu?: (vorschlag: { name: string; muskel: Muskelgruppe | null }) => void;
 }) {
   const [suche, setSuche] = useState('');
   const [muskel, setMuskel] = useState<Muskelgruppe | null>(null);
@@ -47,8 +50,20 @@ export function UebungsListe({
           </Chip>
         ))}
       </div>
+      {onNeu && (
+        <button
+          type="button"
+          onClick={() => onNeu({ name: suche.trim(), muskel })}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-linie px-4 font-semibold hover:bg-flaeche-hoch"
+        >
+          <Plus aria-hidden size={20} />
+          Neue Übung anlegen
+        </button>
+      )}
       {gefiltert.length === 0 ? (
-        <p className="py-8 text-center text-text-leise">Keine Übung gefunden.</p>
+        <p className="py-8 text-center text-text-leise">
+          {onNeu && suche.trim() ? `Keine Übung gefunden – leg „${suche.trim()}“ über den Knopf oben neu an.` : 'Keine Übung gefunden.'}
+        </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {gefiltert.map((u) => {

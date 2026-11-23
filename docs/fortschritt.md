@@ -59,6 +59,7 @@ Stand: 2026-11-19 (E9 läuft)
   - Pausentimer startet nach dem Abhaken (Pause der Übung bzw. Profil-Standard), speichert den Endzeitpunkt in localStorage (überlebt Neuladen), ±15 s, Vibration (nur Android) + 3 Pieptöne (Ton wird beim Abhaken per Nutzer-Geste entsperrt). Liegt das Ende beim Zurückkehren schon über 6 s zurück, wird nicht mehr nachträglich gepiept.
   - Wake Lock hält den Bildschirm während des Trainings an.
   - Beenden: nicht abgehakte Sätze und leere Übungen werden verworfen (mit Rückfrage); ohne erledigten Satz wird das Training verworfen. Zusammenfassung mit Dauer, Volumen, Sätzen, neuen Rekorden (gold) und Übungen.
+  - **Ergänzung (23.11.2026):** In der Übungsauswahl (laufendes Training und Vorlagen) gibt es „Neue Übung anlegen“. Suchtext und Muskelfilter werden ins Formular übernommen; die neue eigene Übung ist danach gleich ausgewählt.
 
 - **Teil-Änderungen transaktional (Fix nach CI-Fehler in E4):** Profil und Übungseinstellungen werden über `aktualisiereProfil`/`aktualisiereUebungsEinstellung` geändert (Lesen + Schreiben in einer Dexie-Transaktion). Vorher konnte eine schnelle zweite Änderung die erste überschreiben (veralteter Bildschirmzustand).
 - **Schreibzähler `data-schreibt`** am `<html>`-Element (Anzahl laufender IndexedDB-Schreibvorgänge). E2E-Tests warten vor jedem `reload()` mit `gespeichert(page)` auf "0" – Chromium bricht sonst noch offene Transaktionen beim Neuladen ab.

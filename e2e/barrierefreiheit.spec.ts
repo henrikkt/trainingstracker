@@ -26,6 +26,11 @@ test('alle Hauptseiten: WCAG 2.2 AA und Touch-Ziele', async ({ page }, info) => 
   await page.getByRole('button', { name: 'Übungen hinzufügen' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await pruefeSeite(page, 'Übungsauswahl (Dialog)', handy);
+  await page.getByRole('button', { name: 'Neue Übung anlegen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Neue Übung' })).toBeVisible();
+  await pruefeSeite(page, 'Neue Übung (Dialog)', handy);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Übungen hinzufügen' })).toBeVisible();
   await page.keyboard.press('Escape');
 
   await page.goto('./#/plaene/uebungen');

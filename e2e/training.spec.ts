@@ -111,3 +111,26 @@ test('Freies Training komplett offline erfassen', async ({ page, context }) => {
   await expect(page.getByText('10/5')).toBeVisible();
   await context.setOffline(false);
 });
+
+test('Fehlende Übung direkt im laufenden Training anlegen', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Freies Training starten' }).click();
+  await page.getByRole('button', { name: 'Übung hinzufügen' }).click();
+  const auswahl = page.getByRole('dialog', { name: 'Übungen hinzufügen' });
+  // Suchtext und Muskelfilter werden ins Formular übernommen
+  await auswahl.getByPlaceholder('Übung suchen …').fill('Landmine Press');
+  await auswahl.getByRole('group', { name: 'Nach Muskelgruppe filtern' }).getByRole('button', { name: 'Schultern' }).click();
+  await expect(auswahl.getByText(/Keine Übung gefunden/)).toBeVisible();
+  await auswahl.getByRole('button', { name: 'Neue Übung anlegen' }).click();
+
+  const formular = page.getByRole('dialog', { name: 'Neue Übung' });
+  await expect(formular.getByRole('textbox', { name: 'Name' })).toHaveValue('Landmine Press');
+  await expect(formular.getByRole('combobox', { name: 'Muskelgruppe' })).toHaveValue('schultern');
+  await formular.getByRole('button', { name: 'Anlegen und auswählen' }).click();
+
+  // Zurück in der Auswahl: neue Übung ist bereits gewählt
+  await auswahl.getByPlaceholder('Übung suchen …').fill('landmine');
+  await expect(auswahl.getByRole('button', { name: /Landmine Press/ })).toHaveAttribute('aria-pressed', 'true');
+  await auswahl.getByRole('button', { name: '1 Übung hinzufügen' }).click();
+  await expect(karte(page, 'Landmine Press')).toBeVisible();
+});
