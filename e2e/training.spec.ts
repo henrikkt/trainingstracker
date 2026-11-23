@@ -80,6 +80,7 @@ test('Training aus Vorlage erfassen, nach Neuladen fortsetzen, Zusammenfassung u
 });
 
 test('Leiste „Jetzt dran“ folgt dem aktuellen Satz und springt nach dem Zuklappen wieder hin', async ({ page }) => {
+  page.on('dialog', (d) => void d.accept()); // Rückfrage „0 kg“ bestätigen
   await page.goto('./#/plaene');
   await page.getByRole('button', { name: 'Beispiel Push übernehmen' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Push' })).toBeVisible();
@@ -157,4 +158,45 @@ test('Fehlende Übung direkt im laufenden Training anlegen', async ({ page }) =>
   await expect(auswahl.getByRole('button', { name: /Landmine Press/ })).toHaveAttribute('aria-pressed', 'true');
   await auswahl.getByRole('button', { name: '1 Übung hinzufügen' }).click();
   await expect(karte(page, 'Landmine Press')).toBeVisible();
+});
+
+test('Rückfrage bei 0 kg: Abbrechen lässt den Satz offen, Bestätigen gilt für die ganze Übung', async ({ page }) => {
+  // Ein Handler für alle Dialoge: merkt sich die Meldung und antwortet wie gerade eingestellt
+  const meldungen: string[] = [];
+  let bestaetigen = false;
+  page.on('dialog', (d) => {
+    meldungen.push(d.message());
+    void (bestaetigen ? d.accept() : d.dismiss());
+  });
+  await page.goto('./#/plaene');
+  await page.getByRole('button', { name: 'Beispiel Push übernehmen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Push' })).toBeVisible();
+  await page.goto('./#/training');
+  await page.getByRole('button', { name: 'Vorlage Push starten' }).click();
+  const jetzt = page.getByRole('group', { name: 'Jetzt dran' });
+  const satz1 = page.getByRole('region', { name: 'Satz 1 bearbeiten' });
+
+  // Abbrechen: nicht abgehakt, Satz bleibt zum Eintragen offen
+  await satz1.getByRole('button', { name: 'Satz abhaken' }).click();
+  await expect.poll(() => meldungen).toEqual(['0 kg bei „Bankdrücken (Langhantel)“ – Satz wirklich ohne Gewicht abhaken?']);
+  await expect(satz1).toBeVisible();
+  await expect(jetzt).toContainText('Satz 1/3');
+
+  // Mit Gewicht: keine Rückfrage
+  await feld(satz1, 'Gewicht').fill('20');
+  await feld(satz1, 'Gewicht').press('Enter');
+  await satz1.getByRole('button', { name: 'Satz abhaken' }).click();
+  await expect(jetzt).toContainText('Satz 2/3');
+  expect(meldungen).toHaveLength(1);
+
+  // Satz 2 auf 0 kg: einmal bestätigen → Satz 3 (auch 0 kg) ohne erneute Frage
+  const satz2 = page.getByRole('region', { name: 'Satz 2 bearbeiten' });
+  await feld(satz2, 'Gewicht').fill('0');
+  await feld(satz2, 'Gewicht').press('Enter');
+  bestaetigen = true;
+  await satz2.getByRole('button', { name: 'Satz abhaken' }).click();
+  await expect(jetzt).toContainText('Satz 3/3');
+  await page.getByRole('region', { name: 'Satz 3 bearbeiten' }).getByRole('button', { name: 'Satz abhaken' }).click();
+  await expect(page.getByRole('button', { name: 'Satz 3 nicht erledigt' })).toBeVisible();
+  expect(meldungen).toHaveLength(2);
 });

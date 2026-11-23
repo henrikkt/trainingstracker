@@ -153,6 +153,14 @@ export function aktuellerSatz(t: Training, aufgeklappt: SatzPosition | null): Sa
   return naechsterOffenerSatz(t, satz ? aufgeklappt! : undefined);
 }
 
+/**
+ * Rückfrage beim Abhaken: 0 kg bei einer Übung mit Gewicht (alles außer Körpergewicht) ist meist ein Versehen –
+ * es würde Statistik und Vorschläge verfälschen (z. B. „Meiste Wdh.“ statt Gewichtsrekord).
+ */
+export function brauchtGewichtsRueckfrage(uebung: Pick<Uebung, 'geraet'> | undefined, satz: Pick<Satz, 'gewicht'>): boolean {
+  return uebung !== undefined && uebung.geraet !== 'koerpergewicht' && satz.gewicht <= 0;
+}
+
 export function offeneSaetze(t: Training): number {
   return t.uebungen.reduce((n, ue) => n + ue.saetze.filter((s) => !s.erledigt).length, 0);
 }

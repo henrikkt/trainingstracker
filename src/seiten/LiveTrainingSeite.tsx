@@ -13,6 +13,7 @@ import { effektivesFoto } from '../domain/foto.ts';
 import {
   abschliessen,
   aktuellerSatz,
+  brauchtGewichtsRueckfrage,
   aendereGewicht,
   aendereSatz,
   ersetzeUebung,
@@ -47,6 +48,8 @@ export function LiveTrainingSeite() {
   const [entwurf, setEntwurf] = useState<Training | null>(null);
   const [aktiv, setAktiv] = useState<SatzPosition | null>(null);
   const [auswahlOffen, setAuswahlOffen] = useState(false);
+  /** Übungen, bei denen „ohne Gewicht“ in diesem Training schon bestätigt wurde (nur einmal fragen) */
+  const [ohneGewichtOk, setOhneGewichtOk] = useState<ReadonlySet<string>>(new Set());
 
   // Entwurf einmalig aus der Datenbank übernehmen; danach führt der Entwurf (schnelle Eingaben gehen nicht verloren)
   useEffect(() => {
@@ -75,6 +78,16 @@ export function LiveTrainingSeite() {
     entsperreTon(); // Nutzer-Geste: erlaubt den Ton am Pausenende
     const ue = entwurf.uebungen[u]!;
     const warErledigt = ue.saetze[s]!.erledigt;
+    if (!warErledigt && !ohneGewichtOk.has(ue.uebungId)) {
+      const uebung = nachschlag(ue.uebungId);
+      if (brauchtGewichtsRueckfrage(uebung, ue.saetze[s]!)) {
+        if (!window.confirm(`0 kg bei „${uebung!.name}“ – Satz wirklich ohne Gewicht abhaken?`)) {
+          setAktiv({ uebung: u, satz: s }); // Satz aufklappen, damit das Gewicht gleich eingetragen werden kann
+          return;
+        }
+        setOhneGewichtOk((alt) => new Set(alt).add(ue.uebungId));
+      }
+    }
     const neu = ersetzeUebung(entwurf, u, setzeErledigt(ue, s, !warErledigt, jetzt()));
     aendern(neu);
     if (!warErledigt) {

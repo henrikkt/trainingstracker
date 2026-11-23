@@ -64,6 +64,7 @@ Stand: 2026-11-23 (E9 läuft; Studio/Fotos ergänzt)
     - **Leiste „Jetzt dran“** fest unter der Kopfzeile: aktueller Satz (`aktuellerSatz`: aufgeklappter offener Satz, sonst nächster offener) mit Foto, Gewicht × Wdh. (vorbelegt mit der Empfehlung, Hinweis „empfohlen“) und Einstellung (bricht um, nie abgeschnitten). Tipp klappt den Satz auf und scrollt hin – auch nach „Zuklappen“.
     - **Verlauf:** Übungskarte zeigt die letzten 3 Einheiten mit Datum (`plan.frueher`), darunter die Empfehlung für heute.
     - **Scrollen:** Beim ersten Satz einer Übung wird die ganze Karte gezeigt, wenn der Satz-Editor dann noch ganz ins Bild passt (`lib/scrollen.ts`).
+    - **Rückfrage bei 0 kg** beim Abhaken (alle Geräte außer Körpergewicht, `brauchtGewichtsRueckfrage`), einmal pro Übung und Training; „Abbrechen“ lässt den Satz zum Eintragen offen.
     - **Arbeitsweise:** UI-Änderungen werden zusätzlich live mit `playwright-cli` geprüft (siehe CLAUDE.md).
   - **Ergänzung (23.11.2026):** Studios, Fotos, Einstellungsnotizen:
     - **Studio** „Kraftkultur“ (Profil: „Mein Studio“, Standard Kraftkultur, „Keins“ möglich). Übungsauswahl und Katalog starten mit dem Studio-Filter (Umschalter Kraftkultur | Alle Übungen); findet die Suche nur außerhalb des Studios etwas, gibt es einen Hinweis mit „Alle Übungen zeigen“. Eigene Übungen: Häkchen „Gibt es bei Kraftkultur“ (beim Anlegen vorbelegt). **Vorläufig** gehören alle freien Katalog-Übungen (ohne „Maschine“) zu Kraftkultur, bis die echte Geräteliste da ist.

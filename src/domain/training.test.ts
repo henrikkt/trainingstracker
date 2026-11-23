@@ -3,6 +3,7 @@ import { findeUebung } from './katalog.ts';
 import { s, training } from './testhilfen.ts';
 import {
   aktuellerSatz,
+  brauchtGewichtsRueckfrage,
   abschliessen,
   aendereGewicht,
   aendereSatz,
@@ -154,5 +155,18 @@ describe('aktuellerSatz', () => {
   it('nichts aufgeklappt → erster offener; alles erledigt → null', () => {
     expect(aktuellerSatz(t, null)).toEqual({ uebung: 0, satz: 1 });
     expect(aktuellerSatz(training('2026-11-23', { kniebeuge: [s(100, 5)] }, 'y'), null)).toBeNull();
+  });
+});
+
+describe('brauchtGewichtsRueckfrage', () => {
+  it('0 kg bei Hantel, Maschine, Kabel → nachfragen', () => {
+    expect(brauchtGewichtsRueckfrage({ geraet: 'langhantel' }, { gewicht: 0 })).toBe(true);
+    expect(brauchtGewichtsRueckfrage({ geraet: 'maschine' }, { gewicht: 0 })).toBe(true);
+    expect(brauchtGewichtsRueckfrage({ geraet: 'kabel' }, { gewicht: 0 })).toBe(true);
+  });
+  it('nicht bei Gewicht > 0, Körpergewicht-Übungen oder unbekannter Übung', () => {
+    expect(brauchtGewichtsRueckfrage({ geraet: 'langhantel' }, { gewicht: 20 })).toBe(false);
+    expect(brauchtGewichtsRueckfrage({ geraet: 'koerpergewicht' }, { gewicht: 0 })).toBe(false);
+    expect(brauchtGewichtsRueckfrage(undefined, { gewicht: 0 })).toBe(false);
   });
 });
