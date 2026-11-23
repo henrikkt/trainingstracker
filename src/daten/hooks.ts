@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { STANDARD_PROFIL } from '../domain/einstellungen.ts';
+import { effektivesFoto } from '../domain/foto.ts';
 import { findeUebung, KATALOG } from '../domain/katalog.ts';
+import { meinStudio, type Studio } from '../domain/studios.ts';
 import type { KoerpergewichtEintrag, ProfilEinstellungen, Training, Uebung, UebungsEinstellung, Vorlage } from '../domain/typen.ts';
 import { db } from './db.ts';
 import { alleTrainings, istAktiv, leseProfil, ohneMeta } from './repo.ts';
@@ -73,4 +75,15 @@ export function useKoerpergewicht(): KoerpergewichtEintrag[] | undefined {
 
 export function useProfil(): ProfilEinstellungen {
   return useLiveQuery(leseProfil) ?? STANDARD_PROFIL;
+}
+
+/** Studio aus dem Profil (undefined = keins). */
+export function useMeinStudio(): Studio | undefined {
+  return meinStudio(useProfil());
+}
+
+/** Anzuzeigendes Foto je Übung: eigenes Foto aus der Übungseinstellung vor dem Katalog-Foto. */
+export function useFotoVon(): (uebung: Uebung) => string | undefined {
+  const einstellungen = useAlleUebungsEinstellungen();
+  return (uebung) => effektivesFoto(uebung, einstellungen.get(uebung.id), import.meta.env.BASE_URL);
 }

@@ -21,6 +21,8 @@ export class AnmeldeFehler extends Error {}
 export class ServerFehler extends Error {}
 
 export const BATCH = 100;
+/** Höchstens so viele Zeichen (JSON) pro Upload – Fotos in Übungseinstellungen machen Datensätze groß. */
+export const BATCH_ZEICHEN = 1_000_000;
 export const SEITE = 500;
 
 export interface SyncErgebnis {
@@ -33,9 +35,22 @@ export interface SyncErgebnis {
 const cursorSchluessel = (t: SyncTabelle) => `sync.cursor.${t}`;
 const tabelle = (t: SyncTabelle) => db.table<LokalerDatensatz, string>(t);
 
-function stuecke<T>(liste: T[], groesse: number): T[][] {
+/** Teilt in Stücke mit höchstens `anzahl` Einträgen und (ungefähr) `maxZeichen` JSON-Zeichen; jedes Stück hat mindestens einen Eintrag. */
+export function stuecke<T>(liste: T[], anzahl: number, maxZeichen = Infinity): T[][] {
   const ergebnis: T[][] = [];
-  for (let i = 0; i < liste.length; i += groesse) ergebnis.push(liste.slice(i, i + groesse));
+  let aktuell: T[] = [];
+  let zeichen = 0;
+  for (const eintrag of liste) {
+    const groesse = maxZeichen === Infinity ? 0 : JSON.stringify(eintrag).length;
+    if (aktuell.length > 0 && (aktuell.length >= anzahl || zeichen + groesse > maxZeichen)) {
+      ergebnis.push(aktuell);
+      aktuell = [];
+      zeichen = 0;
+    }
+    aktuell.push(eintrag);
+    zeichen += groesse;
+  }
+  if (aktuell.length > 0) ergebnis.push(aktuell);
   return ergebnis;
 }
 
@@ -58,7 +73,7 @@ export async function pushe(server: SyncServer, nutzerId: string): Promise<{ hoc
   for (const t of SYNC_TABELLEN) {
     const { server: serverTabelle, schluessel } = TABELLEN[t];
     const offen = await tabelle(t).where('ausstehend').equals(1).toArray();
-    for (const stueck of stuecke(offen, BATCH)) {
+    for (const stueck of stuecke(offen, BATCH, BATCH_ZEICHEN)) {
       let erledigt: LokalerDatensatz[] = stueck;
       try {
         await server.hochladen(serverTabelle, stueck.map((ds) => zuServer(t, ds, nutzerId)));

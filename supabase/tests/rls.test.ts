@@ -1,4 +1,5 @@
 import type { PGlite } from '@electric-sql/pglite';
+import { randomBytes } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { als, starteTestDatenbank } from './pglite.ts';
 
@@ -130,6 +131,18 @@ describe('Prüfungen und Konto-Löschung', () => {
     expect(await versuch('', '{}')).toMatch(/check constraint/);
     expect(await versuch('x2', JSON.stringify({ text: 'x'.repeat(5000) }))).toMatch(/check constraint/);
     expect(await versuch('x3', JSON.stringify({ text: 'x'.repeat(5000) }), 'workouts')).toBe('');
+  });
+
+  it('Übungseinstellungen dürfen ein kleines Foto enthalten, aber nicht beliebig große Daten', async () => {
+    const versuch = (id: string, zeichen: number) => {
+      // Zufallsdaten: lassen sich (wie echte JPEGs) kaum komprimieren
+      const foto = `data:image/jpeg;base64,${randomBytes(Math.ceil(zeichen * 0.75)).toString('base64').slice(0, zeichen)}`;
+      return als(db, ANNA, () =>
+        fehlerVon(() => db.query(`insert into public.exercise_prefs (user_id, id, data, client_updated_at) values ($1, $2, $3, now())`, [ANNA, id, JSON.stringify({ uebungId: id, foto })])),
+      );
+    };
+    expect(await versuch('foto-ok', 60_000)).toBe('');
+    expect(await versuch('foto-zu-gross', 140_000)).toMatch(/check constraint/);
   });
 
   it('Konto löschen entfernt alle Daten der Person (Kaskade), andere bleiben', async () => {

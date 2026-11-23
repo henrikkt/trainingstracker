@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-19 (E9 läuft)
+Stand: 2026-11-23 (E9 läuft; Studio/Fotos ergänzt)
 
 ## Etappen Phase 1 (MVP)
 
@@ -20,7 +20,8 @@ Stand: 2026-11-19 (E9 läuft)
 ## Nächste Schritte
 1. **Admin (du):** App vom Home-Bildschirm **entfernen und neu hinzufügen** (iOS liest den Statusleisten-Stil nur bei der Installation; vorher Sync-Symbol ✓ abwarten!), dann M10 (Schrift oben, springende Menüleiste) erneut prüfen. Übrige Handy-Tests erledigt (siehe [docs/abnahme.md](abnahme.md)); M2 Android übersprungen.
 2. **Offen, bewusst verschoben (19.11.2026):** Wiederherstellungstest mit dem echten privaten age-Schlüssel (Abnahmepunkt A4b bleibt bis dahin **unerfüllt**). Anleitung in `backup/README.md`; Mindestvariante: nur „Nur prüfen“ (entschlüsseln + Zeilenzahlen, schreibt nichts). Claude bietet ihn am Ende der Abnahme erneut an.
-3. Danach: Phase 1 abschließen; Phase-2-Ideen (Teilen mit Freunden, Plate-Rechner, Supersätze, Aufwärmsätze, Passkeys, CSV-Import).
+3. **Kraftkultur-Maschinen:** Admin schickt Liste + Fotos → Claude legt sie als Katalog-Übungen (feste IDs) mit Foto an und ersetzt die vorläufige Studio-Liste in `src/domain/studios.ts` durch die echte.
+4. Danach: Phase 1 abschließen; Phase-2-Ideen (Teilen mit Freunden, Plate-Rechner, Supersätze, Aufwärmsätze, Passkeys, CSV-Import).
 
 ## Entscheidungen und Abweichungen vom Plan
 - **App-Name „Stemm“**, Akzent `#C6F432` auf `#0D0F12`; Kontraste werden automatisch getestet (`src/lib/kontrast.test.ts`).
@@ -59,6 +60,12 @@ Stand: 2026-11-19 (E9 läuft)
   - Pausentimer startet nach dem Abhaken (Pause der Übung bzw. Profil-Standard), speichert den Endzeitpunkt in localStorage (überlebt Neuladen), ±15 s, Vibration (nur Android) + 3 Pieptöne (Ton wird beim Abhaken per Nutzer-Geste entsperrt). Liegt das Ende beim Zurückkehren schon über 6 s zurück, wird nicht mehr nachträglich gepiept.
   - Wake Lock hält den Bildschirm während des Trainings an.
   - Beenden: nicht abgehakte Sätze und leere Übungen werden verworfen (mit Rückfrage); ohne erledigten Satz wird das Training verworfen. Zusammenfassung mit Dauer, Volumen, Sätzen, neuen Rekorden (gold) und Übungen.
+  - **Ergänzung (23.11.2026):** Studios, Fotos, Einstellungsnotizen:
+    - **Studio** „Kraftkultur“ (Profil: „Mein Studio“, Standard Kraftkultur, „Keins“ möglich). Übungsauswahl und Katalog starten mit dem Studio-Filter (Umschalter Kraftkultur | Alle Übungen); findet die Suche nur außerhalb des Studios etwas, gibt es einen Hinweis mit „Alle Übungen zeigen“. Eigene Übungen: Häkchen „Gibt es bei Kraftkultur“ (beim Anlegen vorbelegt). **Vorläufig** gehören alle freien Katalog-Übungen (ohne „Maschine“) zu Kraftkultur, bis die echte Geräteliste da ist.
+    - **Gemeinsame Fotos nur über den Code** (Studio-Katalog, für alle sichtbar). Fotos aus der App sind persönlich: JPEG-Data-URL in der Übungseinstellung (max. 480 px, ≤ 60 000 Zeichen), laufen über Sync und Backup. Eigenes Foto hat Vorrang vor dem Katalog-Foto.
+    - **Migration** `20261123120000_uebungsfotos.sql`: Grenze für `exercise_prefs` 16 KB → 128 KB. RLS unverändert. Sync lädt zusätzlich in Stücken von höchstens ~1 MB hoch (`BATCH_ZEICHEN`).
+    - **Einstellungsnotiz** („Sitz Stufe 4“) pro Übung, persönlich; bearbeitbar in den Übungseinstellungen und direkt im Training (Knopf neben dem Papierkorb bzw. Tipp auf die Notiz).
+    - „Auf Standard zurücksetzen“ setzt nur Steigerung/Wdh./Pause zurück (Notiz und Foto bleiben).
   - **Ergänzung (23.11.2026):** In der Übungsauswahl (laufendes Training und Vorlagen) gibt es „Neue Übung anlegen“. Suchtext und Muskelfilter werden ins Formular übernommen; die neue eigene Übung ist danach gleich ausgewählt.
 
 - **Teil-Änderungen transaktional (Fix nach CI-Fehler in E4):** Profil und Übungseinstellungen werden über `aktualisiereProfil`/`aktualisiereUebungsEinstellung` geändert (Lesen + Schreiben in einer Dexie-Transaktion). Vorher konnte eine schnelle zweite Änderung die erste überschreiben (veralteter Bildschirmzustand).

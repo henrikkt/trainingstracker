@@ -13,6 +13,7 @@ import { tagesSchluessel } from '../domain/fortschritt.ts';
 import { ladeHerunter } from '../lib/download.ts';
 import { istSpeicherDauerhaft } from '../daten/speicher.ts';
 import { formatierePause, GEWICHTS_SCHRITTE, PAUSE_GRENZEN } from '../domain/einstellungen.ts';
+import { meinStudio, STUDIOS } from '../domain/studios.ts';
 import type { ProfilEinstellungen } from '../domain/typen.ts';
 import { formatiereZahl } from '../lib/format.ts';
 
@@ -60,6 +61,15 @@ export function ProfilSeite() {
             optionen={GEWICHTS_SCHRITTE.map((s) => ({ wert: s, text: `${formatiereZahl(s)} kg` }))}
             onChange={(gewichtsSchritt) => setze({ gewichtsSchritt })}
           />
+          <div className="flex flex-col gap-1">
+            <Segment
+              label="Mein Studio"
+              wert={meinStudio(profil)?.id ?? 'keins'}
+              optionen={[...STUDIOS.map((st) => ({ wert: st.id, text: st.name })), { wert: 'keins', text: 'Keins' }]}
+              onChange={(id) => setze({ studio: id === 'keins' ? null : id })}
+            />
+            <p className="text-sm text-text-leise">Die Übungsauswahl zeigt zuerst, was es dort gibt.</p>
+          </div>
         </Karte>
 
         <Karte className="flex items-start gap-4">

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../daten/db.ts';
-import { anzahlAusstehend, aktualisiereProfil, loescheVorlage, speichereKoerpergewicht, speichereTraining, speichereVorlage } from '../daten/repo.ts';
-import { NetzwerkFehler, pulle, pushe, SEITE, synchronisiere } from './motor.ts';
+import { anzahlAusstehend, aktualisiereProfil, aktualisiereUebungsEinstellung, loescheVorlage, speichereKoerpergewicht, speichereTraining, speichereVorlage } from '../daten/repo.ts';
+import { NetzwerkFehler, pulle, pushe, SEITE, stuecke, synchronisiere } from './motor.ts';
 import { TestServer } from './testServer.ts';
 
 const NUTZER = '11111111-1111-1111-1111-111111111111';
@@ -119,5 +119,26 @@ describe('Kompletter Sync zwischen zwei Geräten', () => {
     await synchronisiere(server, NUTZER);
     expect(server.zeile('workouts', 't1')?.data).toMatchObject({ titel: 'Auf Gerät B umbenannt' });
     expect(await db.trainings.get('t1')).toMatchObject({ titel: 'Auf Gerät B umbenannt', ausstehend: 0 });
+  });
+});
+
+describe('Fotos in Übungseinstellungen', () => {
+  it('Stücke beim Upload: höchstens n Einträge und begrenzte Größe, große Einträge einzeln', () => {
+    expect(stuecke([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+    const gross = 'x'.repeat(600);
+    expect(stuecke(['a', gross, gross, 'b'], 100, 1000)).toEqual([['a', gross], [gross, 'b']]);
+    expect(stuecke(['x'.repeat(2000)], 100, 1000)).toHaveLength(1);
+  });
+
+  it('Foto und Notiz kommen auf dem anderen Gerät an', async () => {
+    const foto = `data:image/jpeg;base64,${'A'.repeat(50_000)}`;
+    await aktualisiereUebungsEinstellung('kniebeuge', { notiz: 'Ablage Loch 7', foto });
+    await synchronisiere(server, NUTZER);
+    expect(server.zeile('exercise_prefs', 'kniebeuge')?.data).toMatchObject({ notiz: 'Ablage Loch 7', foto });
+
+    // „Anderes Gerät“: lokale Daten weg, alles neu holen
+    await Promise.all(db.tables.map((t) => t.clear()));
+    await pulle(server);
+    expect(await db.uebungsEinstellungen.get('kniebeuge')).toMatchObject({ notiz: 'Ablage Loch 7', foto });
   });
 });

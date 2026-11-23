@@ -55,14 +55,14 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
 - `src/components/` – App-Rahmen, Navigation, UI-Bausteine:
   - `ui.tsx`: `Knopf`, `Karte`, `SeitenKopf` (mit `zurueck`/`aktion`), `Reiter`, `IconKnopf`, `LeererZustand`
   - `Stepper.tsx` (–/+ mit editierbarem Wert), `Auswahl.tsx` (`Segment`, `Chip`, `AuswahlFeld`, `TextFeld`)
-  - `Diagramm.tsx` (`Verlauf`: lazy geladenes `LinienDiagramm.tsx` mit Recharts), `Vollbild.tsx` (Dialog), `UebungsListe.tsx` (Suche + Filter), `UebungsAuswahl.tsx` (Mehrfachauswahl), `EigeneUebungFormular.tsx`
+  - `Diagramm.tsx` (`Verlauf`: lazy geladenes `LinienDiagramm.tsx` mit Recharts), `Vollbild.tsx` (Dialog), `UebungsListe.tsx` (Suche + Studio-Umschalter + Filter + Vorschaubilder), `UebungsAuswahl.tsx` (Mehrfachauswahl, „Neue Übung anlegen“), `EigeneUebungFormular.tsx`, `Foto.tsx` (`FotoKnopf` Vorschau/Großansicht, `FotoBearbeiten` Kamera)
 - `src/daten/` – lokale Datenbank: `db.ts` (Dexie-Schema v2 inkl. `meta`, Sync-Metadaten), `repo.ts` (**alle Schreibzugriffe**), `hooks.ts` (reaktive Lesezugriffe), `speicher.ts` (persist)
   - `supabase.ts` (Client oder `null` = lokaler Modus), `sitzung.ts` (`useSitzung`, anmelden, Link einlösen, Passwort setzen, abmelden), `besitzer.ts` (wem gehören die lokalen Daten)
 - `src/seiten/` – eine Datei pro Route: `/training`, `/plaene`, `/plaene/vorlagen/:id`, `/plaene/uebungen`, `/plaene/uebungen/neu`, `/plaene/uebungen/:id`, `/training/laufend`, `/einladung` (ohne Login erreichbar), `/training/:id` (Zusammenfassung, `?neu=1` nach dem Beenden), `/fortschritt`, `/fortschritt/uebungen`, `/fortschritt/uebungen/:id`, `/fortschritt/koerpergewicht`, `/profil`, `/profil/zugaenge` (nur Admin)
 - `src/sync/` – Synchronisierung: `abbildung.ts` (lokal ↔ Server, Konfliktregel), `motor.ts` (Push/Pull, Server-Schnittstelle, Fehlerarten), `supabaseServer.ts`, `dienst.ts` (Auslöser, Status, `useSyncStatus`), `testServer.ts` (nachgebauter Server für Tests)
 - `src/components/SyncAnzeige.tsx` (`SyncPunkt` im Seitenkopf), `SyncKarte.tsx` (Profil)
 - `src/components/training/` – `UebungImTraining.tsx` (Übung mit Sätzen, aufgeklappter Satz-Editor), `PausenLeiste.tsx`
-- `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`)
+- `src/hooks/` – React-Hooks; `src/lib/` – Hilfsfunktionen: `format.ts` (Zahlen, Datum, Dauer, Uhr), `kontrast.ts`, `pause.ts` (Pausentimer mit Endzeitpunkt in localStorage), `geraet.ts` (Ton, Vibration, Wake Lock, `useJetzt`), `bild.ts` (Foto per Canvas verkleinern)
 - `src/domain/` – Fachlogik, nur reine Funktionen mit Tests:
   - `typen.ts` (Übung, Satz, Training, Muskelgruppen, Geräte)
   - `katalog.ts` (70 Übungen, Suche) – **IDs nie ändern**
@@ -71,9 +71,15 @@ Vitest immer über `npm test` starten (nicht `npx vitest`): `scripts/vitest.mjs`
   - `kennzahlen.ts` (e1RM Epley, Volumen, Verlauf, ISO-Woche, Wochen-Volumen pro Muskelgruppe)
   - `rekorde.ts` (PRs, neue Rekorde eines Trainings), `letztesMal.ts` („3 × 8 × 80 kg“)
   - `einstellungen.ts` (Profil-Standards, effektive Übungseinstellungen), `beispielVorlagen.ts`
+  - `studios.ts` (Studios mit Katalog-Übungs-IDs, `meinStudio`, `gibtEsImStudio`) – **Studio-IDs nie ändern**; eigene Übungen tragen `studios` selbst
+  - `foto.ts` (Fotogröße/-grenzen, `effektivesFoto`: eigenes vor Katalog-Foto, `bereinigeNotiz`)
   - `fortschritt.ts` (Kalender, Tagesschlüssel, Übungsübersicht, Körpergewicht-Verlauf), `export.ts` (CSV)
   - `training.ts` (Erfassen: `planeUebung`, Sätze vorbelegen/ändern/abhaken, `naechsterOffenerSatz`, `abschliessen`, `zusammenfassen`)
   - `testhilfen.ts` – `s(kg, wdh)` und `training(datum, {uebungId: saetze})` für Tests
+
+## Studio-Katalog und Fotos
+- Maschinen eines Studios kommen als Katalog-Übungen in `katalog.ts` (feste IDs) und in die Studio-Liste in `studios.ts`. Fotos dafür nach `public/uebungen/` (JPEG, ~480 px, keine Personen; Repo ist öffentlich), Pfad im Feld `foto` der Übung. Werden offline mitgecacht (`jpg`/`webp` in `globPatterns`).
+- Eigene Fotos und Einstellungsnotizen liegen in der Übungseinstellung (`exercise_prefs`, Grenze 128 KB) und sind nur für die Person selbst sichtbar.
 
 ## Supabase
 - `supabase/migrations/` – SQL-Migrationen (nie bestehende ändern, immer neue Datei mit Zeitstempel). `supabase/config.toml` – lokaler Stack (Auth-Einstellungen wie in Produktion).

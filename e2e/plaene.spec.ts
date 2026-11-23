@@ -48,6 +48,10 @@ test('Neue Vorlage mit Übungsauswahl (Suche + Mehrfachauswahl)', async ({ page 
   await dialog.getByRole('button', { name: /Kniebeuge \(Langhantel\)/ }).click();
   await dialog.getByPlaceholder('Übung suchen …').fill('');
   await dialog.getByRole('button', { name: 'Waden', exact: true }).click();
+  // Maschinen gehören (noch) nicht zum Studio-Filter → erst „Alle Übungen“
+  await expect(dialog.getByRole('radio', { name: 'Kraftkultur' })).toBeChecked();
+  await expect(dialog.getByRole('button', { name: /Wadenheben sitzend/ })).toBeHidden();
+  await dialog.getByRole('radio', { name: 'Alle Übungen' }).click();
   await dialog.getByRole('button', { name: /Wadenheben sitzend/ }).click();
   await dialog.getByRole('button', { name: '2 Übungen hinzufügen' }).click();
 

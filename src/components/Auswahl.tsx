@@ -5,13 +5,15 @@ interface SegmentProps<T extends string | number> {
   optionen: readonly { wert: T; text: string }[];
   wert: T;
   onChange: (wert: T) => void;
+  /** Beschriftung nur für Screenreader (spart Platz, wenn der Zusammenhang klar ist) */
+  labelVersteckt?: boolean;
 }
 
 /** Umschalter mit 2–4 Optionen (Radio-Gruppe). */
-export function Segment<T extends string | number>({ label, optionen, wert, onChange }: SegmentProps<T>) {
+export function Segment<T extends string | number>({ label, optionen, wert, onChange, labelVersteckt }: SegmentProps<T>) {
   return (
     <fieldset className="flex flex-col gap-1">
-      <legend className="mb-1 text-sm font-semibold text-text-leise">{label}</legend>
+      <legend className={labelVersteckt ? "sr-only" : "mb-1 text-sm font-semibold text-text-leise"}>{label}</legend>
       <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-2xl bg-grund p-1">
         {optionen.map((o) => {
           const aktiv = o.wert === wert;

@@ -7,7 +7,8 @@ import { UebungImTraining } from '../components/training/UebungImTraining.tsx';
 import { Knopf } from '../components/ui.tsx';
 import { UebungsAuswahl } from '../components/UebungsAuswahl.tsx';
 import { useAlleUebungsEinstellungen, useProfil, useTrainings, useUebungsNachschlag } from '../daten/hooks.ts';
-import { jetzt, loescheTraining, speichereTraining } from '../daten/repo.ts';
+import { aktualisiereUebungsEinstellung, jetzt, loescheTraining, speichereTraining } from '../daten/repo.ts';
+import { effektivesFoto } from '../domain/foto.ts';
 import {
   abschliessen,
   aendereGewicht,
@@ -128,6 +129,9 @@ export function LiveTrainingSeite() {
             key={`${ue.uebungId}-${u}`}
             ue={ue}
             uebung={nachschlag(ue.uebungId)}
+            foto={effektivesFoto(nachschlag(ue.uebungId), einstellungen.get(ue.uebungId), import.meta.env.BASE_URL)}
+            notiz={einstellungen.get(ue.uebungId)?.notiz}
+            onNotizAendern={(notiz) => void aktualisiereUebungsEinstellung(ue.uebungId, { notiz })}
             plan={planFuer(u)}
             profil={profil}
             aktiverSatz={aktiv?.uebung === u ? aktiv.satz : null}

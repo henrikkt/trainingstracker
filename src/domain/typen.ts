@@ -65,6 +65,10 @@ export interface Uebung {
   /** Abweichender Standard-Wiederholungsbereich (sonst 8–12). */
   wdhBereich?: WdhBereich;
   eigene?: boolean;
+  /** Nur eigene Übungen: in welchen Studios es sie gibt (IDs aus studios.ts). Katalog-Übungen stehen in der Studio-Liste. */
+  studios?: readonly string[];
+  /** Nur Katalog: Foto der Maschine, Pfad relativ zur App (z. B. "uebungen/kk-beinpresse.jpg") */
+  foto?: string;
 }
 
 /** Wie eine Übung fürs nächste Mal gesteigert wird. */
@@ -112,6 +116,10 @@ export interface UebungsEinstellung {
   steigerung?: Steigerung;
   pauseSek?: number;
   wdhBereich?: WdhBereich;
+  /** Einstellung an der Maschine, z. B. „Sitz Stufe 4, Polster Loch 6“ */
+  notiz?: string;
+  /** Eigenes Foto als JPEG-Data-URL (stark verkleinert, siehe domain/foto.ts) */
+  foto?: string;
 }
 
 export type Intensitaet = 'rir' | 'rpe';
@@ -124,6 +132,8 @@ export interface ProfilEinstellungen {
   intensitaet: Intensitaet;
   /** Schrittweite der +/–-Knöpfe beim Gewicht */
   gewichtsSchritt: number;
+  /** Studio, in dem man meistens trainiert (ID aus studios.ts); null = keins; fehlt = Standard-Studio */
+  studio?: string | null;
 }
 
 export interface KoerpergewichtEintrag {

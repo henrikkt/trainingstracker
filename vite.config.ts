@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
+          globPatterns: ['**/*.{js,css,html,svg,png,jpg,webp,ico,webmanifest,woff2}'],
           navigateFallback: `${base}index.html`,
           cleanupOutdatedCaches: true,
           // Erste Installation übernimmt die offene Seite sofort (Updates bleiben „prompt“)

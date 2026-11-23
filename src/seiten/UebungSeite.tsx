@@ -1,11 +1,14 @@
 import { RotateCcw, Trash2, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Segment } from '../components/Auswahl.tsx';
+import { Segment, TextFeld } from '../components/Auswahl.tsx';
+import { FotoBearbeiten } from '../components/Foto.tsx';
 import { EigeneUebungFormular } from '../components/EigeneUebungFormular.tsx';
 import { Stepper } from '../components/Stepper.tsx';
 import { Karte, Knopf, SeitenKopf } from '../components/ui.tsx';
-import { useEigeneUebungen, useProfil, useUebungsEinstellung } from '../daten/hooks.ts';
-import { aktualisiereUebungsEinstellung, loescheEigeneUebung, speichereEigeneUebung, speichereUebungsEinstellung } from '../daten/repo.ts';
+import { useEigeneUebungen, useMeinStudio, useProfil, useUebungsEinstellung } from '../daten/hooks.ts';
+import { aktualisiereUebungsEinstellung, loescheEigeneUebung, speichereEigeneUebung } from '../daten/repo.ts';
+import { bereinigeNotiz, effektivesFoto, NOTIZ_MAX } from '../domain/foto.ts';
 import { effektiveEinstellungen, formatierePause, normalisiereWdhBereich, PAUSE_GRENZEN } from '../domain/einstellungen.ts';
 import { findeUebung } from '../domain/katalog.ts';
 import { standardSteigerung } from '../domain/steigerung.ts';
@@ -21,6 +24,7 @@ export function UebungSeite() {
   const einstellung = useUebungsEinstellung(id);
   const profil = useProfil();
   const navigate = useNavigate();
+  const studio = useMeinStudio();
 
   const uebung = id ? findeUebung(id, eigene ?? []) : undefined;
   if (!uebung) {
@@ -51,6 +55,20 @@ export function UebungSeite() {
         <TrendingUp aria-hidden size={18} /> Verlauf und Rekorde ansehen
       </Link>
       <div className="flex flex-col gap-4 pb-6">
+        <Karte className="flex flex-col gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-bold">Foto und Einstellung</h2>
+            <p className="text-sm text-text-leise">Damit du die Maschine wiedererkennst und weißt, wie du sie einstellst. Wird im Training angezeigt.</p>
+          </div>
+          <NotizFeld key={uebung.id} notiz={einstellung?.notiz} onAendern={(notiz) => setze({ notiz })} />
+          <FotoBearbeiten
+            name={uebung.name}
+            foto={effektivesFoto(uebung, einstellung, import.meta.env.BASE_URL)}
+            eigenesFoto={Boolean(einstellung?.foto)}
+            onFoto={(foto) => setze({ foto })}
+          />
+        </Karte>
+
         <Karte className="flex flex-col gap-4">
           <div>
             <h2 className="font-display text-2xl font-bold">Steigerung fürs nächste Mal</h2>
@@ -96,7 +114,7 @@ export function UebungSeite() {
         </Karte>
 
         {eff.angepasst && (
-          <Knopf variante="sekundaer" icon={RotateCcw} onClick={() => void speichereUebungsEinstellung({ uebungId: uebung.id })}>
+          <Knopf variante="sekundaer" icon={RotateCcw} onClick={() => setze({ steigerung: undefined, pauseSek: undefined, wdhBereich: undefined })}>
             Auf Standard zurücksetzen
           </Knopf>
         )}
@@ -104,7 +122,7 @@ export function UebungSeite() {
         {uebung.eigene && (
           <Karte className="flex flex-col gap-4">
             <h2 className="font-display text-2xl font-bold">Eigene Übung bearbeiten</h2>
-            <EigeneUebungFormular key={uebung.id} start={uebung} knopfText="Änderungen speichern" onSpeichern={(daten) => void speichereEigeneUebung({ ...uebung, ...daten })} />
+            <EigeneUebungFormular key={uebung.id} start={uebung} studio={studio} knopfText="Änderungen speichern" onSpeichern={(daten) => void speichereEigeneUebung({ ...uebung, ...daten })} />
             <Knopf
               variante="leise"
               icon={Trash2}
@@ -121,5 +139,33 @@ export function UebungSeite() {
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * Einstellungsnotiz („Sitz Stufe 4“). Eigener Zustand, damit verzögerte DB-Updates das Tippen nicht stören;
+ * gespeichert wird bei jeder Änderung (bereinigt).
+ */
+function NotizFeld({ notiz, onAendern }: { notiz: string | undefined; onAendern: (notiz: string | undefined) => void }) {
+  const [text, setText] = useState(notiz ?? '');
+  const [bearbeitet, setBearbeitet] = useState(false);
+  // Änderung von einem anderen Gerät übernehmen, solange hier nicht getippt wird
+  useEffect(() => {
+    if (!bearbeitet) setText(notiz ?? '');
+  }, [notiz, bearbeitet]);
+  return (
+    <div onBlur={() => setBearbeitet(false)}>
+      <TextFeld
+        label="Einstellung an der Maschine"
+        wert={text}
+        maxLaenge={NOTIZ_MAX}
+        platzhalter="z. B. Sitz Stufe 4, Polster Loch 6"
+        onChange={(t) => {
+          setBearbeitet(true);
+          setText(t);
+          onAendern(bereinigeNotiz(t));
+        }}
+      />
+    </div>
   );
 }
