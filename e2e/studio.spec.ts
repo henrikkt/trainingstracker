@@ -51,7 +51,7 @@ test('Studio-Filter: vorausgewählt, umschaltbar, im Profil abschaltbar; eigene 
 
 test('Foto und Einstellungsnotiz: in den Übungseinstellungen, im Training, nach Neuladen', async ({ page }) => {
   await page.goto('./#/plaene/uebungen/kniebeuge');
-  await page.getByRole('textbox', { name: 'Einstellung an der Maschine' }).fill('Ablage Loch 7');
+  await page.getByRole('textbox', { name: 'Notiz zur Übung' }).fill('Ablage Loch 7');
   await page.getByLabel('Foto auswählen').setInputFiles(await testFoto(page));
   const vorschau = page.getByRole('button', { name: 'Foto Kniebeuge (Langhantel) ansehen' });
   await expect(vorschau).toBeVisible();
@@ -62,7 +62,7 @@ test('Foto und Einstellungsnotiz: in den Übungseinstellungen, im Training, nach
 
   await gespeichert(page);
   await page.reload();
-  await expect(page.getByRole('textbox', { name: 'Einstellung an der Maschine' })).toHaveValue('Ablage Loch 7');
+  await expect(page.getByRole('textbox', { name: 'Notiz zur Übung' })).toHaveValue('Ablage Loch 7');
   await expect(vorschau).toBeVisible();
 
   // Vorschaubild auch in der Übungsliste
@@ -86,14 +86,14 @@ test('Foto und Einstellungsnotiz: in den Übungseinstellungen, im Training, nach
   await expect(page.getByRole('dialog', { name: 'Kniebeuge (Langhantel)' }).getByRole('img', { name: 'Foto Kniebeuge (Langhantel)' })).toBeVisible();
   await page.keyboard.press('Escape');
 
-  await page.getByRole('button', { name: 'Einstellung: Ablage Loch 7 – bearbeiten' }).click();
-  await page.getByRole('textbox', { name: 'Einstellung an der Maschine' }).fill('Ablage Loch 8');
+  await page.getByRole('button', { name: 'Notiz: Ablage Loch 7 – bearbeiten' }).click();
+  await page.getByRole('textbox', { name: 'Notiz zur Übung' }).fill('Ablage Loch 8');
   await page.getByRole('button', { name: 'Fertig' }).click();
-  await expect(page.getByRole('button', { name: 'Einstellung: Ablage Loch 8 – bearbeiten' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Notiz: Ablage Loch 8 – bearbeiten' })).toBeVisible();
 
   // Foto entfernen
   await page.goto('./#/plaene/uebungen/kniebeuge');
-  await expect(page.getByRole('textbox', { name: 'Einstellung an der Maschine' })).toHaveValue('Ablage Loch 8');
+  await expect(page.getByRole('textbox', { name: 'Notiz zur Übung' })).toHaveValue('Ablage Loch 8');
   await page.getByRole('button', { name: 'Foto entfernen' }).click();
   await expect(page.getByRole('button', { name: 'Foto aufnehmen' })).toBeVisible();
   await expect(vorschau).toHaveCount(0);
@@ -108,10 +108,46 @@ test('Einstellung direkt im Training notieren (ohne vorherige Notiz)', async ({ 
   await auswahl.getByRole('button', { name: /Klimmzüge/ }).click();
   await auswahl.getByRole('button', { name: '1 Übung hinzufügen' }).click();
 
-  await page.getByRole('button', { name: 'Einstellung für Klimmzüge notieren' }).click();
-  await page.getByRole('textbox', { name: 'Einstellung an der Maschine' }).fill('Griff eng');
+  await page.getByRole('button', { name: 'Notiz zu Klimmzüge schreiben' }).click();
+  await page.getByRole('textbox', { name: 'Notiz zur Übung' }).fill('Griff eng');
   await page.getByRole('button', { name: 'Fertig' }).click();
   await gespeichert(page);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Einstellung: Griff eng – bearbeiten' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Notiz: Griff eng – bearbeiten' })).toBeVisible();
+});
+
+test('Notiz aus dem Satz heraus gehört zur Übung und erscheint im nächsten Training wieder', async ({ page }) => {
+  const klimmzuegeHinzufuegen = async () => {
+    await page.getByRole('button', { name: 'Übung hinzufügen' }).click();
+    const auswahl = page.getByRole('dialog', { name: 'Übungen hinzufügen' });
+    await auswahl.getByPlaceholder('Übung suchen …').fill('klimmz');
+    await auswahl.getByRole('button', { name: /Klimmzüge/ }).click();
+    await auswahl.getByRole('button', { name: '1 Übung hinzufügen' }).click();
+  };
+  await page.goto('./#/training');
+  await page.getByRole('button', { name: 'Freies Training starten' }).click();
+  await klimmzuegeHinzufuegen();
+
+  // Sprechblase im aufgeklappten Satz öffnet die Notiz zur Übung (keine Notiz pro Satz)
+  const satz1 = page.getByRole('region', { name: 'Satz 1 bearbeiten' });
+  await satz1.getByRole('button', { name: 'Notiz zur Übung' }).click();
+  await page.getByRole('textbox', { name: 'Notiz zur Übung' }).fill('Griff eng, Band blau');
+  await page.getByRole('button', { name: 'Fertig' }).click();
+  await expect(page.getByRole('button', { name: 'Notiz: Griff eng, Band blau – bearbeiten' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Jetzt dran' })).toContainText('Griff eng, Band blau');
+
+  await satz1.getByRole('button', { name: 'Satz abhaken' }).click();
+  page.on('dialog', (d) => void d.accept());
+  await page.getByRole('button', { name: 'Beenden', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Stark gemacht!' })).toBeVisible();
+
+  // Nächstes Training: Notiz ist wieder da – gespeichert bei der Übung, nicht im alten Satz
+  await page.goto('./#/training');
+  await page.getByRole('button', { name: 'Freies Training starten' }).click();
+  await klimmzuegeHinzufuegen();
+  await expect(page.getByRole('button', { name: 'Notiz: Griff eng, Band blau – bearbeiten' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Jetzt dran' })).toContainText('Griff eng, Band blau');
+  // … und in den Übungseinstellungen
+  await page.goto('./#/plaene/uebungen/klimmzuege');
+  await expect(page.getByRole('textbox', { name: 'Notiz zur Übung' })).toHaveValue('Griff eng, Band blau');
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bereinigeNotiz, effektivesFoto, FOTO_MAX_ZEICHEN, istGueltigesFoto, NOTIZ_MAX, zielGroesse } from './foto.ts';
+import { bereinigeNotiz, uebernimmSatzNotiz, effektivesFoto, FOTO_MAX_ZEICHEN, istGueltigesFoto, NOTIZ_MAX, zielGroesse } from './foto.ts';
 
 describe('zielGroesse', () => {
   it('verkleinert auf die längste Seite und behält das Seitenverhältnis', () => {
@@ -39,5 +39,14 @@ describe('bereinigeNotiz', () => {
     expect(bereinigeNotiz('  Sitz   Stufe 4 \n Polster 6 ')).toBe('Sitz Stufe 4 Polster 6');
     expect(bereinigeNotiz('   ')).toBeUndefined();
     expect(bereinigeNotiz('x'.repeat(300))).toHaveLength(NOTIZ_MAX);
+  });
+});
+
+describe('uebernimmSatzNotiz', () => {
+  it('übernimmt, hängt an oder lässt doppelte weg', () => {
+    expect(uebernimmSatzNotiz(undefined, ' Sitz 4 ')).toBe('Sitz 4');
+    expect(uebernimmSatzNotiz('Ablage Loch 7', 'Sitz 4')).toBe('Ablage Loch 7 · Sitz 4');
+    expect(uebernimmSatzNotiz('Sitz 4, Ablage 7', 'Sitz 4')).toBe('Sitz 4, Ablage 7');
+    expect(uebernimmSatzNotiz('Sitz 4', '   ')).toBe('Sitz 4');
   });
 });

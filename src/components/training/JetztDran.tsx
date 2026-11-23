@@ -1,4 +1,4 @@
-import { ChevronRight, SlidersHorizontal } from 'lucide-react';
+import { ChevronRight, StickyNote } from 'lucide-react';
 import type { Satz } from '../../domain/typen.ts';
 import { formatiereGewicht } from '../../lib/format.ts';
 import { FotoKnopf } from '../Foto.tsx';
@@ -8,7 +8,7 @@ export const satzEditorSelektor = (uebung: number, satz: number) => `[data-uebun
 
 /**
  * Feste Leiste unter der Kopfzeile: der Satz, an dem man gerade dran ist – mit Foto, Gewicht × Wdh.
- * (vorbelegt mit der Empfehlung) und der Einstellung an der Maschine. Tipp springt zum Satz und klappt ihn auf.
+ * (vorbelegt mit der Empfehlung) und der Notiz zur Übung. Tipp springt zum Satz und klappt ihn auf.
  */
 export function JetztDran({
   name,
@@ -44,9 +44,9 @@ export function JetztDran({
             {empfohlen && <span className="shrink-0 text-text-leise">empfohlen</span>}
           </span>
           {notiz && (
-            // Einstellung immer vollständig lesbar (bricht um statt abzuschneiden)
+            // Notiz zur Übung immer vollständig lesbar (bricht um statt abzuschneiden)
             <span className="flex items-start gap-1.5 text-sm text-text">
-              <SlidersHorizontal aria-hidden size={14} className="mt-0.5 shrink-0 text-akzent" />
+              <StickyNote aria-hidden size={14} className="mt-0.5 shrink-0 text-akzent" />
               <span className="min-w-0 break-words">{notiz}</span>
             </span>
           )}

@@ -32,9 +32,21 @@ export function effektivesFoto(uebung: Pick<Uebung, 'foto'> | undefined, einstel
   return undefined;
 }
 
-/** Notiz für die Maschine aufräumen: Leerzeichen kürzen, höchstens 200 Zeichen; leer → undefined (= löschen). */
-export const NOTIZ_MAX = 200;
+/** Notiz zur Übung aufräumen: Leerzeichen kürzen, höchstens NOTIZ_MAX Zeichen; leer → undefined (= löschen). */
+export const NOTIZ_MAX = 300;
 export function bereinigeNotiz(text: string): string | undefined {
   const t = text.replace(/\s+/g, ' ').trim().slice(0, NOTIZ_MAX);
   return t || undefined;
+}
+
+/**
+ * Alte Notiz an einem einzelnen Satz in die Notiz zur Übung übernehmen (früher gab es Notizen pro Satz).
+ * Hängt sie mit „ · “ an; ist der Text schon enthalten, bleibt die Übungsnotiz unverändert.
+ */
+export function uebernimmSatzNotiz(uebungsNotiz: string | undefined, satzNotiz: string): string | undefined {
+  const neu = bereinigeNotiz(satzNotiz);
+  if (!neu) return uebungsNotiz;
+  if (!uebungsNotiz) return neu;
+  if (uebungsNotiz.includes(neu)) return uebungsNotiz;
+  return bereinigeNotiz(`${uebungsNotiz} · ${neu}`);
 }

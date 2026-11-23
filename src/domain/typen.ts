@@ -116,7 +116,7 @@ export interface UebungsEinstellung {
   steigerung?: Steigerung;
   pauseSek?: number;
   wdhBereich?: WdhBereich;
-  /** Einstellung an der Maschine, z. B. „Sitz Stufe 4, Polster Loch 6“ */
+  /** Notiz zur Übung (dauerhaft), z. B. Einstellung/Ladeposition „Sitz Stufe 4, Ablage Loch 7“ */
   notiz?: string;
   /** Eigenes Foto als JPEG-Data-URL (stark verkleinert, siehe domain/foto.ts) */
   foto?: string;

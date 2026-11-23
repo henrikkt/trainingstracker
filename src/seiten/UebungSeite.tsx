@@ -57,8 +57,8 @@ export function UebungSeite() {
       <div className="flex flex-col gap-4 pb-6">
         <Karte className="flex flex-col gap-4">
           <div>
-            <h2 className="font-display text-2xl font-bold">Foto und Einstellung</h2>
-            <p className="text-sm text-text-leise">Damit du die Maschine wiedererkennst und weißt, wie du sie einstellst. Wird im Training angezeigt.</p>
+            <h2 className="font-display text-2xl font-bold">Foto und Notiz</h2>
+            <p className="text-sm text-text-leise">Gilt dauerhaft für diese Übung (z. B. Einstellung, Ladeposition, Hinweise) und wird in jedem Training angezeigt.</p>
           </div>
           <NotizFeld key={uebung.id} notiz={einstellung?.notiz} onAendern={(notiz) => setze({ notiz })} />
           <FotoBearbeiten
@@ -143,7 +143,7 @@ export function UebungSeite() {
 }
 
 /**
- * Einstellungsnotiz („Sitz Stufe 4“). Eigener Zustand, damit verzögerte DB-Updates das Tippen nicht stören;
+ * Notiz zur Übung („Sitz Stufe 4, Ablage Loch 7“). Eigener Zustand, damit verzögerte DB-Updates das Tippen nicht stören;
  * gespeichert wird bei jeder Änderung (bereinigt).
  */
 function NotizFeld({ notiz, onAendern }: { notiz: string | undefined; onAendern: (notiz: string | undefined) => void }) {
@@ -156,10 +156,10 @@ function NotizFeld({ notiz, onAendern }: { notiz: string | undefined; onAendern:
   return (
     <div onBlur={() => setBearbeitet(false)}>
       <TextFeld
-        label="Einstellung an der Maschine"
+        label="Notiz zur Übung"
         wert={text}
         maxLaenge={NOTIZ_MAX}
-        platzhalter="z. B. Sitz Stufe 4, Polster Loch 6"
+        platzhalter="z. B. Sitz Stufe 4, Ablage Loch 7"
         onChange={(t) => {
           setBearbeitet(true);
           setText(t);

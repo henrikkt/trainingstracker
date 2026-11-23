@@ -1,6 +1,6 @@
 # Fortschritt – Stemm
 
-Stand: 2026-11-23 (E9 läuft; Studio/Fotos ergänzt)
+Stand: 2026-11-24 (E9 läuft; Studio/Fotos, Training-Leiste, Notiz zur Übung)
 
 ## Etappen Phase 1 (MVP)
 
@@ -64,6 +64,7 @@ Stand: 2026-11-23 (E9 läuft; Studio/Fotos ergänzt)
     - **Leiste „Jetzt dran“** fest unter der Kopfzeile: aktueller Satz (`aktuellerSatz`: aufgeklappter offener Satz, sonst nächster offener) mit Foto, Gewicht × Wdh. (vorbelegt mit der Empfehlung, Hinweis „empfohlen“) und Einstellung (bricht um, nie abgeschnitten). Tipp klappt den Satz auf und scrollt hin – auch nach „Zuklappen“.
     - **Verlauf:** Übungskarte zeigt die letzten 3 Einheiten mit Datum (`plan.frueher`), darunter die Empfehlung für heute.
     - **Scrollen:** Beim ersten Satz einer Übung wird die ganze Karte gezeigt, wenn der Satz-Editor dann noch ganz ins Bild passt (`lib/scrollen.ts`).
+    - **Nur noch eine Notiz pro Übung (24.11.2026):** Die frühere Satz-Notiz (Sprechblase im Satz-Editor) speicherte nur am einzelnen Satz – verwirrend. Jetzt öffnet die Sprechblase die „Notiz zur Übung“ (Übungseinstellung, dauerhaft, max. 300 Zeichen). Alte Satz-Notizen bleiben erhalten und lassen sich per „Zur Übung“ übernehmen (`uebernimmSatzNotiz`). Einheitlich „Notiz zur Übung“ in Training, Leiste und Übungsseite („Foto und Notiz“).
     - **Rückfrage bei 0 kg** beim Abhaken (alle Geräte außer Körpergewicht, `brauchtGewichtsRueckfrage`), einmal pro Übung und Training; „Abbrechen“ lässt den Satz zum Eintragen offen.
     - **Arbeitsweise:** UI-Änderungen werden zusätzlich live mit `playwright-cli` geprüft (siehe CLAUDE.md).
   - **Ergänzung (23.11.2026):** Studios, Fotos, Einstellungsnotizen:

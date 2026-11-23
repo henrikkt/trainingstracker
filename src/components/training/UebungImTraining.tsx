@@ -1,10 +1,10 @@
-import { Check, ChevronDown, Lightbulb, MessageSquare, Pencil, Plus, SlidersHorizontal, Trash2, X } from 'lucide-react';
+import { ArrowUpToLine, Check, ChevronDown, Lightbulb, MessageSquare, Pencil, Plus, StickyNote, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { fasseSaetzeZusammen } from '../../domain/letztesMal.ts';
 import type { UebungsPlan } from '../../domain/training.ts';
 import type { Intensitaet, ProfilEinstellungen, Satz, TrainingsUebung, Uebung } from '../../domain/typen.ts';
 import { formatiereGewicht, formatiereKurzDatum, formatiereZahl } from '../../lib/format.ts';
-import { bereinigeNotiz, NOTIZ_MAX } from '../../domain/foto.ts';
+import { bereinigeNotiz, NOTIZ_MAX, uebernimmSatzNotiz } from '../../domain/foto.ts';
 import { scrollZiel } from '../../lib/scrollen.ts';
 import { Chip, TextFeld } from '../Auswahl.tsx';
 import { FotoKnopf } from '../Foto.tsx';
@@ -29,7 +29,7 @@ interface Props {
   onUebungEntfernen: () => void;
   /** Foto der Maschine (eigenes oder aus dem Katalog) */
   foto?: string;
-  /** Einstellungsnotiz der Übung, z. B. „Sitz Stufe 4“ */
+  /** Notiz zur Übung (gilt dauerhaft für die Übung, nicht nur für dieses Training), z. B. „Sitz Stufe 4, Ablage Loch 7“ */
   notiz?: string;
   onNotizAendern: (notiz: string | undefined) => void;
   /** Position der Übung im Training (für den Sprung aus der Leiste „Jetzt dran“) */
@@ -45,6 +45,11 @@ function satzText(s: Satz, intensitaet: Intensitaet): string {
 /** Eine Übung im laufenden Training: „Letztes Mal“, Vorschlag, Sätze. */
 export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAktivieren, onSatzAendern, onAbhaken, onSatzHinzufuegen, onSatzEntfernen, onUebungEntfernen, foto, notiz, onNotizAendern, index }: Props) {
   const [notizOffen, setNotizOffen] = useState(false);
+  const notizRef = useRef<HTMLDivElement>(null);
+  const oeffneNotiz = () => {
+    setNotizOffen(true);
+    requestAnimationFrame(() => notizRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  };
   const name = uebung?.name ?? 'Unbekannte Übung';
   const erledigt = ue.saetze.filter((s) => s.erledigt).length;
   const v = plan?.vorschlag;
@@ -60,10 +65,11 @@ export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAkti
             {ue.ziel && ` · Ziel ${ue.ziel.saetze} × ${ue.ziel.wdh.min}–${ue.ziel.wdh.max}`}
           </p>
         </div>
-        {!notiz && !notizOffen && <IconKnopf icon={SlidersHorizontal} label={`Einstellung für ${name} notieren`} onClick={() => setNotizOffen(true)} />}
+        {!notiz && !notizOffen && <IconKnopf icon={StickyNote} label={`Notiz zu ${name} schreiben`} onClick={oeffneNotiz} />}
         <IconKnopf icon={Trash2} label={`${name} aus dem Training entfernen`} onClick={onUebungEntfernen} />
       </div>
 
+      <div ref={notizRef} className="scroll-mt-52 empty:hidden">
       {notizOffen ? (
         <NotizEditor
           start={notiz}
@@ -76,16 +82,17 @@ export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAkti
         notiz && (
           <button
             type="button"
-            onClick={() => setNotizOffen(true)}
-            aria-label={`Einstellung: ${notiz} – bearbeiten`}
-            className="flex min-h-12 items-center gap-2 rounded-2xl border border-linie px-3 text-left text-sm"
+            onClick={oeffneNotiz}
+            aria-label={`Notiz: ${notiz} – bearbeiten`}
+            className="flex min-h-12 w-full items-center gap-2 rounded-2xl border border-linie px-3 text-left text-sm"
           >
-            <SlidersHorizontal aria-hidden size={16} className="shrink-0 text-akzent" />
+            <StickyNote aria-hidden size={16} className="shrink-0 text-akzent" />
             <span className="min-w-0 flex-1 font-semibold">{notiz}</span>
             <Pencil aria-hidden size={16} className="shrink-0 text-text-leise" />
           </button>
         )
       )}
+      </div>
 
       {plan && (
         <div className="flex flex-col gap-1 rounded-2xl bg-grund p-3 text-sm">
@@ -135,6 +142,11 @@ export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAkti
                 onAbhaken={() => onAbhaken(i)}
                 onEntfernen={() => onSatzEntfernen(i)}
                 onZuklappen={() => onAktivieren(null)}
+                onUebungsNotiz={oeffneNotiz}
+                onSatzNotizUebernehmen={() => {
+                  onNotizAendern(uebernimmSatzNotiz(notiz, s.notiz ?? ''));
+                  onSatzAendern(i, { notiz: undefined });
+                }}
               />
             </li>
           ) : (
@@ -142,7 +154,7 @@ export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAkti
               <button type="button" onClick={() => onAktivieren(i)} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-2xl pl-3 text-left">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-flaeche text-sm font-bold text-text-leise">{i + 1}</span>
                 <span className={`truncate font-semibold tabular-nums ${s.erledigt ? '' : 'text-text-leise'}`}>{satzText(s, profil.intensitaet)}</span>
-                {s.notiz && <MessageSquare aria-label="mit Notiz" size={16} className="shrink-0 text-text-leise" />}
+                {s.notiz && <MessageSquare aria-label="mit alter Satz-Notiz" size={16} className="shrink-0 text-text-leise" />}
                 <span className="sr-only">bearbeiten</span>
               </button>
               <button
@@ -168,7 +180,7 @@ export function UebungImTraining({ ue, uebung, plan, profil, aktiverSatz, onAkti
   );
 }
 
-/** Aufgeklappter Satz: große Stepper, Anstrengung, Notiz, Abhaken. */
+/** Aufgeklappter Satz: große Stepper, Anstrengung, Abhaken; Knopf für die Notiz zur Übung. */
 function SatzEditor({
   nummer,
   satz,
@@ -177,6 +189,8 @@ function SatzEditor({
   onAbhaken,
   onEntfernen,
   onZuklappen,
+  onUebungsNotiz,
+  onSatzNotizUebernehmen,
 }: {
   nummer: number;
   satz: Satz;
@@ -185,8 +199,11 @@ function SatzEditor({
   onAbhaken: () => void;
   onEntfernen: () => void;
   onZuklappen: () => void;
+  /** öffnet die Notiz zur Übung (es gibt keine Notizen pro Satz mehr) */
+  onUebungsNotiz: () => void;
+  /** alte Notiz dieses Satzes in die Notiz zur Übung übernehmen */
+  onSatzNotizUebernehmen: () => void;
 }) {
-  const [notizOffen, setNotizOffen] = useState(Boolean(satz.notiz));
   const ref = useRef<HTMLElement>(null);
   const rir = profil.intensitaet === 'rir';
   const werte: readonly number[] = rir ? RIR_WERTE : RPE_WERTE;
@@ -236,32 +253,22 @@ function SatzEditor({
         </div>
       </div>
 
-      {notizOffen && (
-        <div className="flex gap-2">
-          <label className="min-w-0 flex-1">
-            <span className="sr-only">Notiz</span>
-            <input
-              value={satz.notiz ?? ''}
-              onChange={(e) => onAendern({ notiz: e.target.value })}
-              maxLength={200}
-              placeholder="Notiz, z. B. Sitz Stufe 4"
-              autoFocus={!satz.notiz}
-              className="min-h-12 w-full rounded-2xl border border-linie bg-flaeche px-4 outline-none placeholder:text-text-leise focus:border-akzent"
-            />
-          </label>
-          <IconKnopf
-            icon={X}
-            label="Notiz entfernen"
-            onClick={() => {
-              onAendern({ notiz: undefined });
-              setNotizOffen(false);
-            }}
-          />
+      {satz.notiz && (
+        // Altbestand: früher gab es Notizen pro Satz – lassen sich mit einem Tipp zur Übung übernehmen
+        <div className="flex items-center gap-2 rounded-2xl border border-linie p-2 pl-3 text-sm">
+          <MessageSquare aria-hidden size={16} className="shrink-0 text-text-leise" />
+          <span className="min-w-0 flex-1">
+            <span className="text-text-leise">Notiz an diesem Satz: </span>
+            {satz.notiz}
+          </span>
+          <Knopf variante="sekundaer" icon={ArrowUpToLine} onClick={onSatzNotizUebernehmen} aria-label="In die Notiz zur Übung übernehmen">
+            Zur Übung
+          </Knopf>
         </div>
       )}
 
       <div className="flex gap-2">
-        {!notizOffen && <IconKnopf icon={MessageSquare} label="Notiz hinzufügen" onClick={() => setNotizOffen(true)} />}
+        <IconKnopf icon={StickyNote} label="Notiz zur Übung" onClick={onUebungsNotiz} />
         <Knopf gross icon={Check} variante={satz.erledigt ? 'sekundaer' : 'primaer'} onClick={onAbhaken} className="flex-1">
           {satz.erledigt ? 'Haken entfernen' : 'Satz abhaken'}
         </Knopf>
@@ -270,7 +277,7 @@ function SatzEditor({
   );
 }
 
-/** Einstellungsnotiz direkt im Training bearbeiten (gespeichert wird mit „Fertig“). */
+/** Notiz zur Übung direkt im Training bearbeiten (gespeichert wird mit „Fertig“, gilt dauerhaft für die Übung). */
 function NotizEditor({ start, onFertig }: { start: string | undefined; onFertig: (notiz: string | undefined) => void }) {
   const [text, setText] = useState(start ?? '');
   return (
@@ -282,7 +289,7 @@ function NotizEditor({ start, onFertig }: { start: string | undefined; onFertig:
       }}
     >
       <div className="min-w-0 flex-1">
-        <TextFeld label="Einstellung an der Maschine" wert={text} onChange={setText} maxLaenge={NOTIZ_MAX} platzhalter="z. B. Sitz Stufe 4" autoFocus />
+        <TextFeld label="Notiz zur Übung" wert={text} onChange={setText} maxLaenge={NOTIZ_MAX} platzhalter="z. B. Sitz Stufe 4, Ablage Loch 7" autoFocus />
       </div>
       <Knopf type="submit">Fertig</Knopf>
     </form>
